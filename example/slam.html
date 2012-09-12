@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<head>
+<script type="text/javascript"
+	src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<script type="text/javascript"
+	src="https://raw.github.com/RobotWebTools/rosjs/master/example/eventemitter2.js"></script>
+<script type="text/javascript"
+	src="https://raw.github.com/RobotWebTools/rosjs/master/ros.js"></script>
+<script type="text/javascript"
+	src="https://raw.github.com/RobotWebTools/actionlibjs/master/actionclient.js"></script>
+<script type="text/javascript"
+	src="https://raw.github.com/RobotWebTools/map2djs/master/map.js"></script>
+<script type="text/javascript" src="../nav2d.js"></script>
+<script type="text/javascript" src="https://raw.github.com/RobotWebTools/keyboardteleopjs/master/keyboardteleop.js"></script>
+
+<script type="text/javascript">
+	function start() {
+		// connect to ROS 
+		var ros = new ROS('ws://localhost:9090');
+		
+		// initialize the canvas 
+		var nav = new Nav2D({
+			ros : ros,
+			canvasID : 'nav',
+			continuous : true,
+			width : 800,
+			height : 600
+		});
+		
+		// initialize the teleop 
+		var telop = new KeyboardTeleop({
+			ros : ros
+			, topic : '/base_controller/command'
+			, throttle: 0.8
+		});
+	}
+</script>
+</head>
+
+<body onload="start()">
+	<canvas id="nav" width="800" height="600"></canvas>
+</body>
+</html>
