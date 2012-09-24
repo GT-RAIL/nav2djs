@@ -151,8 +151,8 @@ function Nav2D(options) {
 	// setup the actionlib client
 	var actionClient = new ActionClient({
 		ros : nav2D.ros,
-		actionName : 'move_base_msgs/MoveBaseAction',
-		serverName : '/move_base',
+		actionName : options.actionName,
+		serverName : options.serverName,
 		timeout : 5000
 	});
 	// pass the event up
