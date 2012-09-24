@@ -34,7 +34,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  *   Author: Russell Toris
- *  Version: September 12, 2012
+ *  Version: September 24, 2012
  *
  *********************************************************************/
 
@@ -159,6 +159,11 @@ function Nav2D(options) {
 	actionClient.on('timeout', function() {
 		nav2D.emit('timeout');
 	});
+	
+	// create a cancel
+	nav2D.cancel = new function() {
+		actionClient.cancel();
+	};
 
 	// create the draw function
 	nav2D.draw = function() {
