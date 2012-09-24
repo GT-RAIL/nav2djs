@@ -161,7 +161,7 @@ function Nav2D(options) {
 	});
 	
 	// create a cancel
-	nav2D.cancel = new function() {
+	nav2D.cancel = function() {
 		actionClient.cancel();
 	};
 
