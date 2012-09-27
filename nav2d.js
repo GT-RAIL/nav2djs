@@ -229,9 +229,7 @@ function Nav2D(options) {
 		}
 	};
 
-	// set the double click action
-	nav2D.canvas
-			.dblclick(function(e) {
+    nav2D.getPoseFromEvent = function(e) {
 				// only go if we have the map data
 				if (nav2D.mapWidth > -1 && nav2D.mapHeight > -1
 						&& nav2D.mapResolution > -1) {
@@ -248,7 +246,13 @@ function Nav2D(options) {
 					var y = ((canvasHeight - nav2D.clickY)
 							* (nav2D.mapHeight / canvasHeight) * nav2D.mapResolution)
 							+ nav2D.mapY;
+                    return [x,y];
+                }
+                else 
+                    return null;
+    };
 
+    nav2D.sendGoalPose = function(x,y) { 
 					// create a goal
 					var goal = new actionClient.Goal({
 						target_pose : {
@@ -286,7 +290,18 @@ function Nav2D(options) {
 					goal.on('feedback', function(feedback) {
 						nav2D.emit('feedback', feedback);
 					});
-				}
-			});
+			};
+	// set the double click action
+	nav2D.canvas.dblclick(function(e) {
+            var poses = nav2D.getPoseFromEvent(e);
+            if(poses != null) {
+                nav2D.sendGoalPose(poses[0],poses[1]);
+            }
+            else {
+                nav2D.ros.emit('error',"Error in getPoseFromEvent");
+                console.log("Error");
+                }
+                
+            });
 }
 Nav2D.prototype.__proto__ = EventEmitter2.prototype;
