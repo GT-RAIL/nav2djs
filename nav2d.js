@@ -151,8 +151,8 @@ function Nav2D(options) {
 	// setup the actionlib client
 	var actionClient = new ActionClient({
 		ros : nav2D.ros,
-		actionName : options.actionName,
-		serverName : options.serverName,
+		actionName : nav2D.actionName,
+		serverName : nav2D.serverName,
 		timeout : 5000
 	});
 	// pass the event up
