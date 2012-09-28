@@ -38,7 +38,21 @@
  *
  *********************************************************************/
 
-function Nav2D(options) {
+/* 
+   Converted to AMD by Jihoon Lee
+   Version: September 27, 2012
+ */
+
+(function (root, factory) {
+    if(typeof define === 'function' && define.amd) {
+        define(['jquery','eventemitter2','actionclient','map'],factory);
+    }
+    else {
+        root.Nav2D = factory(root.jquery,root.EventEmitter2,root.ActionClient,root.Map);
+    }
+ }(this,function(jquery,EventEmitter2,ActionClient,Map)
+{
+    var Nav2D = function(options) {
 	var nav2D = this;
 	options = options || {};
 	nav2D.ros = options.ros;
@@ -253,6 +267,7 @@ function Nav2D(options) {
     };
 
     nav2D.sendGoalPose = function(x,y) { 
+
 					// create a goal
 					var goal = new actionClient.Goal({
 						target_pose : {
@@ -291,6 +306,7 @@ function Nav2D(options) {
 						nav2D.emit('feedback', feedback);
 					});
 			};
+
 	// set the double click action
 	nav2D.canvas.dblclick(function(e) {
             var poses = nav2D.getPoseFromEvent(e);
@@ -301,7 +317,9 @@ function Nav2D(options) {
                 nav2D.ros.emit('error',"Error in getPoseFromEvent");
                 console.log("Error");
                 }
-                
             });
-}
+};
 Nav2D.prototype.__proto__ = EventEmitter2.prototype;
+return Nav2D;
+}
+));
