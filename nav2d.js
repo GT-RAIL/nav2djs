@@ -45,7 +45,7 @@
 
 (function (root, factory) {
     if(typeof define === 'function' && define.amd) {
-        define(['jquery','eventemitter2','robotwebtools_amd/tools/actionclient','robotwebtools_amd/tools/map'],factory);
+        define(['jquery','eventemitter2','actionclient','map'],factory);
     }
     else {
         root.Nav2D = factory(root.jquery,root.EventEmitter2,root.ActionClient,root.Map);
