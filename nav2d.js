@@ -43,15 +43,15 @@
 
 (function(root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define([ 'jquery', 'eventemitter2', 'actionclient', 'map' ], factory);
+    define([ 'jquery', 'eventemitter2', '_actionClient', 'map' ], factory);
   } else {
-    root.Nav2D = factory(root.jquery, root.EventEmitter2, root.ActionClient,
+    root.Nav2D = factory(root.jquery, root.EventEmitter2, root._actionClient,
         root.Map);
   }
 }
     (
         this,
-        function(jquery, EventEmitter2, ActionClient, Map) {
+        function(jquery, EventEmitter2, _actionClient, Map) {
           var Nav2D = function(options) {
             var nav2D = this;
             options = options || {};
@@ -60,18 +60,23 @@
             nav2D.actionName = options.actionName
                 || 'move_base_msgs/MoveBaseAction';
             nav2D.serverTimeout = options.serverTimeout || 5000;
-            _mapTopic = options.mapTopic || '/map';
+            nav2D.mapTopic = options.mapTopic || '/map';
             nav2D.continuous = options.continuous;
-            _canvasID = options.canvasID;
+            nav2D.canvasID = options.canvasID;
             // optional (used if you do not want to stream /map or use a custom image)
             nav2D.image = options.image;
-            _mapMetaTopic = options.mapMetaTopic || '/map_metadata';
+            nav2D.mapMetaTopic = options.mapMetaTopic || '/map_metadata';
+            // optional color settings
+            nav2D.clickColor = options.clickColor || '#543210';
+            nav2D.robotColor = options.robotColor || '#012345';
 
             // icon information for displaying robot and click positions
             var _clickRadius = 1;
             var _clickUpdate = true;
+            var _MAX_CLICK_RADIUS = 5;
             var _robotRadius = 1;
             var _robotRadiusGrow = true;
+            var _MAX_ROBOT_RADIUS = 10;
 
             // position information
             var _robotX;
@@ -79,23 +84,24 @@
             var _clickX;
             var _clickY;
 
-            // map and meta data
+            // map and metadata
             var _map;
             var _mapWidth;
             var _mapHeight;
             var _mapResolution;
             var _mapX;
             var _mapY;
+            var _drawInterval;
 
-            // flag to see if everything (map image, meta data, and robot pose) is available
+            // flag to see if everything (map image, metadata, and robot pose) is available
             var _available = false;
 
             // grab the canvas and set the initial size of the canvas
-            var _canvas = $('#' + _canvasID);
-            _canvas.attr('width', options.width);
-            _canvas.attr('height', options.height);
+            var _canvas = $('#' + nav2D.canvasID);
+            _canvas.attr('width', nav2D.width);
+            _canvas.attr('height', nav2D.height);
 
-            // check if we need to fetch a map
+            // check if we need to fetch a map or if an image was provided
             if (nav2D.image) {
               // set the image
               _map = new Image();
@@ -103,7 +109,7 @@
 
               // get the meta information
               var metaListener = new nav2D.ros.Topic({
-                name : _mapMetaTopic,
+                name : nav2D.mapMetaTopic,
                 messageType : 'nav_msgs/MapMetaData'
               });
               metaListener.subscribe(function(metadata) {
@@ -113,12 +119,15 @@
                 _mapResolution = metadata.resolution;
                 _mapX = metadata.origin.position.x;
                 _mapY = metadata.origin.position.y;
+
+                // we only need the metadata once
+                metaListener.unsubscribe();
               });
             } else {
               // create a map object
-              _mapFetcher = new Map({
+              var _mapFetcher = new Map({
                 ros : nav2D.ros,
-                mapTopic : _mapTopic,
+                mapTopic : nav2D.mapTopic,
                 continuous : nav2D.continuous
               });
               _mapFetcher.on('available', function() {
@@ -135,11 +144,11 @@
             }
 
             // setup a listener for the robot pose
-            var poseListener = new nav2D.ros.Topic({
+            var _poseListener = new nav2D.ros.Topic({
               name : '/robot_pose',
               messageType : 'geometry_msgs/Pose'
             });
-            poseListener
+            _poseListener
                 .subscribe(function(pose) {
                   // only update once we know the map metadata
                   if (_mapWidth && _mapHeight && _mapResolution) {
@@ -153,35 +162,36 @@
                     _robotY = canvasHeight
                         - (((pose.position.y - _mapY) / _mapResolution) * (canvasHeight / _mapHeight));
 
+                    // check if this is the first time we have all information
                     if (!_available) {
                       _available = true;
-                      // notify the user we are avaiable
+                      // notify the user we are available
                       nav2D.emit('available');
                       // set the interval for the draw function
-                      nav2D.interval = setInterval(nav2D.draw, 30);
+                      _drawInterval = setInterval(_draw, 30);
                     }
                   }
                 });
 
             // setup the actionlib client
-            var actionClient = new ActionClient({
+            var _actionClient = new ActionClient({
               ros : nav2D.ros,
               actionName : nav2D.actionName,
               serverName : nav2D.serverName,
-              timeout : 5000
+              timeout : nav2D.serverTimeout
             });
             // pass the event up
-            actionClient.on('timeout', function() {
+            _actionClient.on('timeout', function() {
               nav2D.emit('timeout');
             });
 
             // create a cancel
             nav2D.cancel = function() {
-              actionClient.cancel();
+              _actionClient.cancel();
             };
 
             // create the draw function
-            nav2D.draw = function() {
+            var _draw = function() {
               // grab the drawing context
               var context = _canvas[0].getContext('2d');
 
@@ -189,19 +199,13 @@
               var width = _canvas.attr('width');
               var height = _canvas.attr('height');
 
-              // clear the canvas
-              context.clearRect(0, 0, width, height);
-
-              // check for the map
-              if (_map) {
-                // add the image back to the canvas
-                context.drawImage(_map, 0, 0, width, height);
-              }
+              // add the image back to the canvas
+              context.drawImage(_map, 0, 0, width, height);
 
               // check if the user clicked yet
               if (_clickX && _clickY) {
                 // draw the click point
-                context.fillStyle = '#543210';
+                context.fillStyle = nav2D.clickColor;
                 context.beginPath();
                 context.arc(_clickX, _clickY, _clickRadius, 0, Math.PI * 2,
                     true);
@@ -213,8 +217,8 @@
                   _clickRadius++;
                 }
 
-                // reset at 5 (i.e., blink)
-                if (_clickRadius == 5) {
+                // reset at the threshold (i.e., blink)
+                if (_clickRadius == _MAX_CLICK_RADIUS) {
                   _clickRadius = 1;
                 }
 
@@ -222,35 +226,30 @@
               }
 
               // draw the robot location
-              if (_robotX && _robotY) {
-                // draw the click point
-                context.fillStyle = '#012345';
-                context.beginPath();
-                context.arc(_robotX, _robotY, _robotRadius, 0, Math.PI * 2,
-                    true);
-                context.closePath();
-                context.fill();
+              context.fillStyle = nav2D.robotColor;
+              context.beginPath();
+              context.arc(_robotX, _robotY, _robotRadius, 0, Math.PI * 2, true);
+              context.closePath();
+              context.fill();
 
-                // grow and shrink the icon
-                if (_robotRadiusGrow) {
-                  _robotRadius++;
-                } else {
-                  _robotRadius--;
-                }
-
-                if (_robotRadius == 10 || _robotRadius == 1) {
-                  _robotRadiusGrow = !_robotRadiusGrow;
-                }
+              // grow and shrink the icon
+              if (_robotRadiusGrow) {
+                _robotRadius++;
+              } else {
+                _robotRadius--;
+              }
+              if (_robotRadius == _MAX_ROBOT_RADIUS || _robotRadius == 1) {
+                _robotRadiusGrow = !_robotRadiusGrow;
               }
             };
 
-            nav2D.getPoseFromEvent = function(e) {
+            // get the position in the world from a point clicked by the user
+            nav2D.getPoseFromEvent = function(event) {
               // only go if we have the map data
-              if (_mapWidth > -1 && _mapHeight > -1 && _mapResolution > -1) {
-                // get the y location with (0, 0) at the top left for
-                // drawing
-                _clickX = e.pageX - _canvas.offset().left;
-                _clickY = e.pageY - _canvas.offset().top;
+              if (_available) {
+                // get the y location with (0, 0) at the top left
+                _clickX = event.pageX - _canvas.offset().left;
+                _clickY = event.pageY - _canvas.offset().top;
 
                 // convert the pixel location to a pose
                 var canvasWidth = _canvas.attr('width');
@@ -260,17 +259,18 @@
                 var y = ((canvasHeight - _clickY) * (_mapHeight / canvasHeight) * _mapResolution)
                     + _mapY;
                 return [ x, y ];
-              } else
+              } else {
                 return null;
+              }
             };
 
+            // a function to send the robot to the given goal location
             nav2D.sendGoalPose = function(x, y) {
-
               // create a goal
-              var goal = new actionClient.Goal({
+              var goal = new _actionClient.Goal({
                 target_pose : {
                   header : {
-                    frame_id : "/map"
+                    frame_id : '/map'
                   },
                   pose : {
                     position : {
@@ -287,7 +287,7 @@
                   }
                 }
               });
-              //goal.send();
+              goal.send();
 
               // pass up the events to the user
               goal.on('result', function(result) {
@@ -306,13 +306,12 @@
             };
 
             // set the double click action
-            _canvas.dblclick(function(e) {
-              var poses = nav2D.getPoseFromEvent(e);
+            _canvas.dblclick(function(event) {
+              var poses = nav2D.getPoseFromEvent(event);
               if (poses != null) {
                 nav2D.sendGoalPose(poses[0], poses[1]);
               } else {
-                nav2D.ros.emit('error', "Error in getPoseFromEvent");
-                console.log("Error");
+                nav2D.emit('error', "All of the necessary navigation information is not yet available.");
               }
             });
           };
