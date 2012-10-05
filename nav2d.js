@@ -60,77 +60,77 @@
             nav2D.actionName = options.actionName
                 || 'move_base_msgs/MoveBaseAction';
             nav2D.serverTimeout = options.serverTimeout || 5000;
-            nav2D.mapTopic = options.mapTopic || '/map';
-            nav2D.canvasID = options.canvasID;
-            nav2D.img = options.img;
-            nav2D.mapMetaTopic = options.mapMetaTopic || '/map_metadata';
+            _mapTopic = options.mapTopic || '/map';
             nav2D.continuous = options.continuous;
+            _canvasID = options.canvasID;
+            // optional (used if you do not want to stream /map or use a custom image)
+            nav2D.image = options.image;
+            _mapMetaTopic = options.mapMetaTopic || '/map_metadata';
 
             // icon information for displaying robot and click positions
-            nav2D.clickRadius = 1;
-            nav2D.clickUpdate = true;
-            nav2D.robotRadius = 1;
-            nav2D.robotRadiusGrow = true;
+            var _clickRadius = 1;
+            var _clickUpdate = true;
+            var _robotRadius = 1;
+            var _robotRadiusGrow = true;
 
             // position information
-            nav2D.robotX;
-            nav2D.robotY;
-            nav2D.clickX;
-            nav2D.clickY;
+            var _robotX;
+            var _robotY;
+            var _clickX;
+            var _clickY;
 
             // map and meta data
-            nav2D.map;
-            nav2D.mapWidth;
-            nav2D.mapHeight;
-            nav2D.mapResolution;
-            nav2D.mapX;
-            nav2D.mapY;
+            var _map;
+            var _mapWidth;
+            var _mapHeight;
+            var _mapResolution;
+            var _mapX;
+            var _mapY;
 
-            nav2D.available = false;
+            // flag to see if everything (map image, meta data, and robot pose) is available
+            var _available = false;
 
-            // grab the canvas
-            nav2D.canvas = $('#' + nav2D.canvasID);
-
-            // set the initial size of the canvas
-            nav2D.canvas.attr('width', options.width);
-            nav2D.canvas.attr('height', options.height);
+            // grab the canvas and set the initial size of the canvas
+            var _canvas = $('#' + _canvasID);
+            _canvas.attr('width', options.width);
+            _canvas.attr('height', options.height);
 
             // check if we need to fetch a map
-            if (nav2D.img) {
+            if (nav2D.image) {
               // set the image
-              nav2D.map = new Image();
-              nav2D.map.src = nav2D.img;
+              _map = new Image();
+              _map.src = nav2D.image;
 
               // get the meta information
               var metaListener = new nav2D.ros.Topic({
-                name : nav2D.mapMetaTopic,
+                name : _mapMetaTopic,
                 messageType : 'nav_msgs/MapMetaData'
               });
               metaListener.subscribe(function(metadata) {
                 // set the metadata
-                nav2D.mapWidth = metadata.width;
-                nav2D.mapHeight = metadata.height;
-                nav2D.mapResolution = metadata.resolution;
-                nav2D.mapX = metadata.origin.position.x;
-                nav2D.mapY = metadata.origin.position.y;
+                _mapWidth = metadata.width;
+                _mapHeight = metadata.height;
+                _mapResolution = metadata.resolution;
+                _mapX = metadata.origin.position.x;
+                _mapY = metadata.origin.position.y;
               });
             } else {
               // create a map object
-              nav2D.mapFetcher = new Map({
+              _mapFetcher = new Map({
                 ros : nav2D.ros,
-                mapTopic : nav2D.mapTopic,
+                mapTopic : _mapTopic,
                 continuous : nav2D.continuous
               });
-              nav2D.mapFetcher.on('available', function() {
+              _mapFetcher.on('available', function() {
                 // store the image
-                nav2D.map = nav2D.mapFetcher.image;
+                _map = _mapFetcher.image;
 
                 // set the metadata
-                nav2D.mapWidth = nav2D.mapFetcher.info.width;
-                nav2D.mapHeight = nav2D.mapFetcher.info.height;
-                nav2D.mapResolution = nav2D.mapFetcher.info.resolution;
-                nav2D.mapX = nav2D.mapFetcher.info.origin.position.x;
-                nav2D.mapY = nav2D.mapFetcher.info.origin.position.y;
+                _mapWidth = _mapFetcher.info.width;
+                _mapHeight = _mapFetcher.info.height;
+                _mapResolution = _mapFetcher.info.resolution;
+                _mapX = _mapFetcher.info.origin.position.x;
+                _mapY = _mapFetcher.info.origin.position.y;
               });
             }
 
@@ -142,19 +142,19 @@
             poseListener
                 .subscribe(function(pose) {
                   // only update once we know the map metadata
-                  if (nav2D.mapWidth && nav2D.mapHeight && nav2D.mapResolution) {
+                  if (_mapWidth && _mapHeight && _mapResolution) {
                     // get the current canvas size
-                    var canvasWidth = nav2D.canvas.attr('width');
-                    var canvasHeight = nav2D.canvas.attr('height');
+                    var canvasWidth = _canvas.attr('width');
+                    var canvasHeight = _canvas.attr('height');
 
                     // set the pixel location with (0, 0) at the top left
-                    nav2D.robotX = ((pose.position.x - nav2D.mapX) / nav2D.mapResolution)
-                        * (canvasWidth / nav2D.mapWidth);
-                    nav2D.robotY = canvasHeight
-                        - (((pose.position.y - nav2D.mapY) / nav2D.mapResolution) * (canvasHeight / nav2D.mapHeight));
+                    _robotX = ((pose.position.x - _mapX) / _mapResolution)
+                        * (canvasWidth / _mapWidth);
+                    _robotY = canvasHeight
+                        - (((pose.position.y - _mapY) / _mapResolution) * (canvasHeight / _mapHeight));
 
-                    if (!nav2D.available) {
-                      nav2D.available = true;
+                    if (!_available) {
+                      _available = true;
                       // notify the user we are avaiable
                       nav2D.emit('available');
                       // set the interval for the draw function
@@ -183,84 +183,82 @@
             // create the draw function
             nav2D.draw = function() {
               // grab the drawing context
-              var context = nav2D.canvas[0].getContext('2d');
+              var context = _canvas[0].getContext('2d');
 
               // grab the current sizes
-              var width = nav2D.canvas.attr('width');
-              var height = nav2D.canvas.attr('height');
+              var width = _canvas.attr('width');
+              var height = _canvas.attr('height');
 
               // clear the canvas
               context.clearRect(0, 0, width, height);
 
               // check for the map
-              if (nav2D.map) {
+              if (_map) {
                 // add the image back to the canvas
-                context.drawImage(nav2D.map, 0, 0, width, height);
+                context.drawImage(_map, 0, 0, width, height);
               }
 
               // check if the user clicked yet
-              if (nav2D.clickX && nav2D.clickY) {
+              if (_clickX && _clickY) {
                 // draw the click point
                 context.fillStyle = '#543210';
                 context.beginPath();
-                context.arc(nav2D.clickX, nav2D.clickY, nav2D.clickRadius, 0,
-                    Math.PI * 2, true);
+                context.arc(_clickX, _clickY, _clickRadius, 0, Math.PI * 2,
+                    true);
                 context.closePath();
                 context.fill();
 
                 // grow half the speed of the refresh rate
-                if (nav2D.clickUpdate) {
-                  nav2D.clickRadius++;
+                if (_clickUpdate) {
+                  _clickRadius++;
                 }
 
                 // reset at 5 (i.e., blink)
-                if (nav2D.clickRadius == 5) {
-                  nav2D.clickRadius = 1;
+                if (_clickRadius == 5) {
+                  _clickRadius = 1;
                 }
 
-                nav2D.clickUpdate = !nav2D.clickUpdate;
+                _clickUpdate = !_clickUpdate;
               }
 
               // draw the robot location
-              if (nav2D.robotX && nav2D.robotY) {
+              if (_robotX && _robotY) {
                 // draw the click point
                 context.fillStyle = '#012345';
                 context.beginPath();
-                context.arc(nav2D.robotX, nav2D.robotY, nav2D.robotRadius, 0,
-                    Math.PI * 2, true);
+                context.arc(_robotX, _robotY, _robotRadius, 0, Math.PI * 2,
+                    true);
                 context.closePath();
                 context.fill();
 
                 // grow and shrink the icon
-                if (nav2D.robotRadiusGrow) {
-                  nav2D.robotRadius++;
+                if (_robotRadiusGrow) {
+                  _robotRadius++;
                 } else {
-                  nav2D.robotRadius--;
+                  _robotRadius--;
                 }
 
-                if (nav2D.robotRadius == 10 || nav2D.robotRadius == 1) {
-                  nav2D.robotRadiusGrow = !nav2D.robotRadiusGrow;
+                if (_robotRadius == 10 || _robotRadius == 1) {
+                  _robotRadiusGrow = !_robotRadiusGrow;
                 }
               }
             };
 
             nav2D.getPoseFromEvent = function(e) {
               // only go if we have the map data
-              if (nav2D.mapWidth > -1 && nav2D.mapHeight > -1
-                  && nav2D.mapResolution > -1) {
+              if (_mapWidth > -1 && _mapHeight > -1 && _mapResolution > -1) {
                 // get the y location with (0, 0) at the top left for
                 // drawing
-                nav2D.clickX = e.pageX - nav2D.canvas.offset().left;
-                nav2D.clickY = e.pageY - nav2D.canvas.offset().top;
+                _clickX = e.pageX - _canvas.offset().left;
+                _clickY = e.pageY - _canvas.offset().top;
 
                 // convert the pixel location to a pose
-                var canvasWidth = nav2D.canvas.attr('width');
-                var canvasHeight = nav2D.canvas.attr('height');
-                var x = (nav2D.clickX * (nav2D.mapWidth / canvasWidth) * nav2D.mapResolution)
-                    + nav2D.mapX;
-                var y = ((canvasHeight - nav2D.clickY)
-                    * (nav2D.mapHeight / canvasHeight) * nav2D.mapResolution)
-                    + nav2D.mapY;
+                var canvasWidth = _canvas.attr('width');
+                var canvasHeight = _canvas.attr('height');
+                var x = (_clickX * (_mapWidth / canvasWidth) * _mapResolution)
+                    + _mapX;
+                var y = ((canvasHeight - _clickY) * (_mapHeight / canvasHeight) * _mapResolution)
+                    + _mapY;
                 return [ x, y ];
               } else
                 return null;
@@ -289,15 +287,15 @@
                   }
                 }
               });
-              goal.send();
+              //goal.send();
 
               // pass up the events to the user
               goal.on('result', function(result) {
                 nav2D.emit('result', result);
 
                 // clear the click icon
-                nav2D.clickX = null;
-                nav2D.clickY = null;
+                _clickX = null;
+                _clickY = null;
               });
               goal.on('status', function(status) {
                 nav2D.emit('status', status);
@@ -308,7 +306,7 @@
             };
 
             // set the double click action
-            nav2D.canvas.dblclick(function(e) {
+            _canvas.dblclick(function(e) {
               var poses = nav2D.getPoseFromEvent(e);
               if (poses != null) {
                 nav2D.sendGoalPose(poses[0], poses[1]);
