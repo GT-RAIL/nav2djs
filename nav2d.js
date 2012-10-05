@@ -34,7 +34,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  *   Author: Russell Toris
- *  Version: September 24, 2012
+ *  Version: October 5, 2012
  *  
  *  Converted to AMD by Jihoon Lee
  *  Version: September 27, 2012
@@ -43,7 +43,7 @@
 
 (function(root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define([ 'jquery', 'eventemitter2', '_actionClient', 'map' ], factory);
+    define([ 'jquery', 'eventemitter2', 'actionclient', 'map' ], factory);
   } else {
     root.Nav2D = factory(root.jquery, root.EventEmitter2, root._actionClient,
         root.Map);
@@ -73,10 +73,10 @@
             // icon information for displaying robot and click positions
             var _clickRadius = 1;
             var _clickUpdate = true;
-            var _MAX_CLICK_RADIUS = 5;
+            var maxClickRadius = 5;
             var _robotRadius = 1;
             var _robotRadiusGrow = true;
-            var _MAX_ROBOT_RADIUS = 10;
+            var maxRobotRadius = 10;
 
             // position information
             var _robotX;
@@ -96,10 +96,8 @@
             // flag to see if everything (map image, metadata, and robot pose) is available
             var _available = false;
 
-            // grab the canvas and set the initial size of the canvas
-            var _canvas = $('#' + nav2D.canvasID);
-            _canvas.attr('width', nav2D.width);
-            _canvas.attr('height', nav2D.height);
+            // grab the canvas
+            var _canvas = document.getElementById(nav2D.canvasID);
 
             // check if we need to fetch a map or if an image was provided
             if (nav2D.image) {
@@ -153,8 +151,8 @@
                   // only update once we know the map metadata
                   if (_mapWidth && _mapHeight && _mapResolution) {
                     // get the current canvas size
-                    var canvasWidth = _canvas.attr('width');
-                    var canvasHeight = _canvas.attr('height');
+                    var canvasWidth = _canvas.getAttribute('width');
+                    var canvasHeight = _canvas.getAttribute('height');
 
                     // set the pixel location with (0, 0) at the top left
                     _robotX = ((pose.position.x - _mapX) / _mapResolution)
@@ -193,11 +191,11 @@
             // create the draw function
             var _draw = function() {
               // grab the drawing context
-              var context = _canvas[0].getContext('2d');
+              var context = _canvas.getContext('2d');
 
               // grab the current sizes
-              var width = _canvas.attr('width');
-              var height = _canvas.attr('height');
+              var width = _canvas.getAttribute('width');
+              var height = _canvas.getAttribute('height');
 
               // add the image back to the canvas
               context.drawImage(_map, 0, 0, width, height);
@@ -218,7 +216,7 @@
                 }
 
                 // reset at the threshold (i.e., blink)
-                if (_clickRadius == _MAX_CLICK_RADIUS) {
+                if (_clickRadius == maxClickRadius) {
                   _clickRadius = 1;
                 }
 
@@ -238,7 +236,7 @@
               } else {
                 _robotRadius--;
               }
-              if (_robotRadius == _MAX_ROBOT_RADIUS || _robotRadius == 1) {
+              if (_robotRadius == maxRobotRadius || _robotRadius == 1) {
                 _robotRadiusGrow = !_robotRadiusGrow;
               }
             };
@@ -248,12 +246,21 @@
               // only go if we have the map data
               if (_available) {
                 // get the y location with (0, 0) at the top left
-                _clickX = event.pageX - _canvas.offset().left;
-                _clickY = event.pageY - _canvas.offset().top;
+                var offsetLeft = 0;
+                var offsetTop = 0;
+                var element = _canvas;
+                while (element && !isNaN(element.offsetLeft)
+                    && !isNaN(element.offsetTop)) {
+                  offsetLeft += element.offsetLeft - element.scrollLeft;
+                  offsetTop += element.offsetTop - element.scrollTop;
+                  element = element.offsetParent;
+                }
+                _clickX = event.pageX - offsetLeft;
+                _clickY = event.pageY - offsetTop;
 
                 // convert the pixel location to a pose
-                var canvasWidth = _canvas.attr('width');
-                var canvasHeight = _canvas.attr('height');
+                var canvasWidth = _canvas.getAttribute('width');
+                var canvasHeight = _canvas.getAttribute('height');
                 var x = (_clickX * (_mapWidth / canvasWidth) * _mapResolution)
                     + _mapX;
                 var y = ((canvasHeight - _clickY) * (_mapHeight / canvasHeight) * _mapResolution)
@@ -305,15 +312,19 @@
               });
             };
 
-            // set the double click action
-            _canvas.dblclick(function(event) {
-              var poses = nav2D.getPoseFromEvent(event);
-              if (poses != null) {
-                nav2D.sendGoalPose(poses[0], poses[1]);
-              } else {
-                nav2D.emit('error', "All of the necessary navigation information is not yet available.");
-              }
-            });
+            _canvas
+                .addEventListener(
+                    'dblclick',
+                    function(event) {
+                      var poses = nav2D.getPoseFromEvent(event);
+                      if (poses != null) {
+                        nav2D.sendGoalPose(poses[0], poses[1]);
+                      } else {
+                        nav2D
+                            .emit('error',
+                                "All of the necessary navigation information is not yet available.");
+                      }
+                    });
           };
           Nav2D.prototype.__proto__ = EventEmitter2.prototype;
           return Nav2D;
