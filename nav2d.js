@@ -48,9 +48,9 @@
         define(['eventemitter2','actionclient','map'],factory);
     }
     else {
-        root.Nav2D = factory(root.jquery,root.EventEmitter2,root.ActionClient,root.Map);
+        root.Nav2D = factory(root.EventEmitter2,root.ActionClient,root.Map);
     }
- }(this,function(jquery,EventEmitter2,ActionClient,Map)
+ }(this,function(EventEmitter2,ActionClient,Map)
 {
     var Nav2D = function(options) {
 	var nav2D = this;
@@ -268,6 +268,7 @@
 
     nav2D.sendGoalPose = function(x,y) { 
 
+                    console.log(actionClient);
 					// create a goal
 					var goal = new actionClient.Goal({
 						target_pose : {
