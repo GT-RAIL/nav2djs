@@ -34,7 +34,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  *   Author: Russell Toris
- *  Version: October 5, 2012
+ *  Version: October 8, 2012
  *  
  *  Converted to AMD by Jihoon Lee
  *  Version: September 27, 2012
@@ -45,13 +45,12 @@
   if (typeof define === 'function' && define.amd) {
     define([ 'eventemitter2', 'actionclient', 'map' ], factory);
   } else {
-    root.Nav2D = factory(root.EventEmitter2, root._actionClient,
-        root.Map);
+    root.Nav2D = factory(root.EventEmitter2, root.ActionClient, root.Map);
   }
 }
     (
         this,
-        function(EventEmitter2, _actionClient, Map) {
+        function(EventEmitter2, ActionClient, Map) {
           var Nav2D = function(options) {
             var nav2D = this;
             options = options || {};
