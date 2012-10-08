@@ -268,7 +268,6 @@
 
     nav2D.sendGoalPose = function(x,y) { 
 
-                    console.log(actionClient);
 					// create a goal
 					var goal = new actionClient.Goal({
 						target_pose : {
