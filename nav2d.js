@@ -149,6 +149,7 @@
             var poseListener = new nav2D.ros.Topic({
               name : '/robot_pose',
               messageType : 'geometry_msgs/Pose'
+              throttle_rate : 100,
             });
             poseListener
                 .subscribe(function(pose) {
