@@ -68,6 +68,12 @@
             // optional color settings
             nav2D.clickColor = options.clickColor || '#543210';
             nav2D.robotColor = options.robotColor || '#012345';
+            nav2D.initialPoseTopic = options.initialPoseTopic || '/initialpose';
+
+            // draw robot 
+            nav2D.drawrobot = options.drawrobot;
+            
+            nav2D.mode = 'none';
             
             // current robot pose message
             nav2D.robotPose = null;
@@ -85,6 +91,7 @@
             // position information
             var robotX;
             var robotY;
+            var robotRotZ;
             var clickX;
             var clickY;
 
@@ -148,7 +155,8 @@
             // setup a listener for the robot pose
             var poseListener = new nav2D.ros.Topic({
               name : '/robot_pose',
-              messageType : 'geometry_msgs/Pose'
+              messageType : 'geometry_msgs/Pose',
+              throttle_rate : 100,
             });
             poseListener
                 .subscribe(function(pose) {
@@ -166,6 +174,14 @@
                         * (canvasWidth / mapWidth);
                     robotY = canvasHeight
                         - (((pose.position.y - mapY) / mapResolution) * (canvasHeight / mapHeight));
+
+                    // get the rotation Z
+                    var q0 = pose.orientation.w;
+                    var q1 = pose.orientation.x;
+                    var q2 = pose.orientation.y;
+                    var q3 = pose.orientation.z;
+                    
+                    robotRotZ = -Math.atan2(2 * ( q0 * q3 + q1 * q2) , 1 - 2 * (Math.pow(q2,2) +Math.pow(q3,2)));
 
                     // check if this is the first time we have all information
                     if (!available) {
@@ -195,6 +211,24 @@
               actionClient.cancel();
             };
 
+            nav2D.drawrobot = nav2D.drawrobot || function(context,robotX,robotY) {
+              context.fillStyle = nav2D.robotColor;
+              context.beginPath();
+              context.arc(robotX, robotY, robotRadius, 0, Math.PI * 2, true);
+              context.closePath();
+              context.fill();
+
+              // grow and shrink the icon
+              if (robotRadiusGrow) {
+                robotRadius++;
+              } else {
+                robotRadius--;
+              }
+              if (robotRadius == maxRobotRadius || robotRadius == 1) {
+                robotRadiusGrow = !robotRadiusGrow;
+              }
+            };
+
             // create the draw function
             var draw = function() {
               // grab the drawing context
@@ -208,12 +242,11 @@
               context.drawImage(map, 0, 0, width, height);
 
               // check if the user clicked yet
-              if (clickX && clickY) {
+              if (clickX && clickY && nav2D.mode == 'none') {
                 // draw the click point
                 context.fillStyle = nav2D.clickColor;
                 context.beginPath();
-                context.arc(clickX, clickY, clickRadius, 0, Math.PI * 2,
-                    true);
+                context.arc(clickX, clickY, clickRadius, 0, Math.PI * 2,true);
                 context.closePath();
                 context.fill();
 
@@ -231,21 +264,7 @@
               }
 
               // draw the robot location
-              context.fillStyle = nav2D.robotColor;
-              context.beginPath();
-              context.arc(robotX, robotY, robotRadius, 0, Math.PI * 2, true);
-              context.closePath();
-              context.fill();
-
-              // grow and shrink the icon
-              if (robotRadiusGrow) {
-                robotRadius++;
-              } else {
-                robotRadius--;
-              }
-              if (robotRadius == maxRobotRadius || robotRadius == 1) {
-                robotRadiusGrow = !robotRadiusGrow;
-              }
+              nav2D.drawrobot(context,robotX,robotY,robotRotZ);
             };
 
             // get the position in the world from a point clicked by the user
@@ -308,6 +327,7 @@
               // pass up the events to the user
               goal.on('result', function(result) {
                 nav2D.emit('result', result);
+                nav2D.mode = 'none';
 
                 // clear the click icon
                 clickX = null;
@@ -319,6 +339,69 @@
               goal.on('feedback', function(feedback) {
                 nav2D.emit('feedback', feedback);
               });
+            };
+
+
+           canvas.addEventListener('click',function(event) {
+             if(nav2D.mode == 'none') {           }
+             else if(nav2D.mode == 'init') 
+             {
+               var poses = nav2D.getPoseFromEvent(event);
+               if (poses != null) {
+                 nav2D.sendInitPose(poses[0], poses[1]);
+               } else {
+                 nav2D.emit('error',"All of the necessary navigation information is not yet available."); 
+               }
+             }
+             else if(nav2D.mode == 'goal') {
+               var poses = nav2D.getPoseFromEvent(event);
+               if (poses != null) {
+                 nav2D.sendGoalPose(poses[0], poses[1]);
+               } else {
+                 nav2D.emit('error',"All of the necessary navigation information is not yet available.");
+               }
+             }
+             else {
+               nav2D.emit('error',"Wrong mode..");
+             }
+             nav2D.mode = 'none';
+            });
+
+            nav2D.setmode = function(mode) {
+              nav2D.mode = mode;
+              clickX = null;
+              clickY = null;
+            };
+
+            nav2D.initPosePub = new nav2D.ros.Topic({
+              name : nav2D.initialPoseTopic,
+              type : 'geometry_msgs/PoseWithCovarianceStamped',
+            });
+
+            nav2D.sendInitPose = function(x,y) {
+              var pose_msg = new ros.Message({
+                header : {
+                    frame_id : '/map'
+                },
+                pose : {
+                  pose : {
+                    position: {
+                      x : x,
+                      y : y,
+                      z : 0,
+                    },
+                    orientation : {
+                      x : 0,
+                      y : 0,
+                      z : 0,
+                      w : 1,
+                    },
+                  },
+                  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                },
+              });
+              nav2D.initPosePub.publish(pose_msg);
+              nav2D.setmode('none');
             };
 
             canvas
