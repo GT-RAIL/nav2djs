@@ -68,6 +68,9 @@
             // optional color settings
             nav2D.clickColor = options.clickColor || '#543210';
             nav2D.robotColor = options.robotColor || '#012345';
+            nav2D.initialPoseTopic = options.initialPoseTopic || '/initialpose';
+            
+            nav2D.mode = 'none';
             
             // current robot pose message
             nav2D.robotPose = null;
@@ -209,7 +212,7 @@
               context.drawImage(map, 0, 0, width, height);
 
               // check if the user clicked yet
-              if (clickX && clickY) {
+              if (clickX && clickY && nav2D.mode == 'none') {
                 // draw the click point
                 context.fillStyle = nav2D.clickColor;
                 context.beginPath();
@@ -309,6 +312,7 @@
               // pass up the events to the user
               goal.on('result', function(result) {
                 nav2D.emit('result', result);
+                nav2D.mode = 'none';
 
                 // clear the click icon
                 clickX = null;
@@ -321,6 +325,74 @@
                 nav2D.emit('feedback', feedback);
               });
             };
+
+
+           canvas.addEventListener('click',function(event) {
+                if(nav2D.mode == 'none')
+                {
+                }
+                else if(nav2D.mode == 'init') 
+                {
+                  var poses = nav2D.getPoseFromEvent(event);
+                  if (poses != null) {
+                    nav2D.sendInitPose(poses[0], poses[1]);
+                  } else {
+                    nav2D.emit('error',"All of the necessary navigation information is not yet available."); 
+                  }
+                }
+                else if(nav2D.mode == 'goal') {
+                  var poses = nav2D.getPoseFromEvent(event);
+                  if (poses != null) {
+                    nav2D.sendGoalPose(poses[0], poses[1]);
+                  } else {
+                    nav2D.emit('error',"All of the necessary navigation information is not yet available.");
+                  }
+                }
+                else {
+                    nav2D.emit('error',"Wrong mode..");
+                }
+                nav2D.mode = 'none';
+              });
+
+            nav2D.setmode = function(mode) {
+                nav2D.mode = mode;
+                clickX = null;
+                clickY = null;
+            };
+
+            nav2D.initPosePub = new nav2D.ros.Topic({
+                name : nav2D.initialPoseTopic,
+                type : 'geometry_msgs/PoseWithCovarianceStamped',
+            });
+
+            nav2D.sendInitPose = function(x,y) {
+                var pose_msg = new ros.Message({
+                    header : {
+                        frame_id : '/map'
+                    },
+                    pose : {
+                        pose : {
+                            position: {
+                                x : x,
+                                y : y,
+                                z : 0,
+                            },
+                            orientation : {
+                                x : 0,
+                                y : 0,
+                                z : 0,
+                                w : 1,
+                            },
+                        },
+                        covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                    },
+                });
+                nav2D.initPosePub.publish(pose_msg);
+                nav2D.setmode('none');
+            };
+
+
+
 
             canvas
                 .addEventListener(
