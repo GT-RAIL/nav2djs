@@ -151,7 +151,7 @@
             // setup a listener for the robot pose
             var poseListener = new nav2D.ros.Topic({
               name : '/robot_pose',
-              messageType : 'geometry_msgs/Pose'
+              messageType : 'geometry_msgs/Pose',
               throttle_rate : 100,
             });
             poseListener
