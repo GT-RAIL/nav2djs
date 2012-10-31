@@ -69,6 +69,9 @@
             nav2D.clickColor = options.clickColor || '#543210';
             nav2D.robotColor = options.robotColor || '#012345';
             nav2D.initialPoseTopic = options.initialPoseTopic || '/initialpose';
+
+            // draw robot 
+            nav2D.drawrobot = options.drawrobot;
             
             nav2D.mode = 'none';
             
@@ -88,6 +91,7 @@
             // position information
             var robotX;
             var robotY;
+            var robotRotZ;
             var clickX;
             var clickY;
 
@@ -171,6 +175,14 @@
                     robotY = canvasHeight
                         - (((pose.position.y - mapY) / mapResolution) * (canvasHeight / mapHeight));
 
+                    // get the rotation Z
+                    var q0 = pose.orientation.w;
+                    var q1 = pose.orientation.x;
+                    var q2 = pose.orientation.y;
+                    var q3 = pose.orientation.z;
+                    
+                    robotRotZ = -Math.atan2(2 * ( q0 * q3 + q1 * q2) , 1 - 2 * (Math.pow(q2,2) +Math.pow(q3,2)));
+
                     // check if this is the first time we have all information
                     if (!available) {
                       available = true;
@@ -199,6 +211,24 @@
               actionClient.cancel();
             };
 
+            nav2D.drawrobot = nav2D.drawrobot || function(context,robotX,robotY) {
+              context.fillStyle = nav2D.robotColor;
+              context.beginPath();
+              context.arc(robotX, robotY, robotRadius, 0, Math.PI * 2, true);
+              context.closePath();
+              context.fill();
+
+              // grow and shrink the icon
+              if (robotRadiusGrow) {
+                robotRadius++;
+              } else {
+                robotRadius--;
+              }
+              if (robotRadius == maxRobotRadius || robotRadius == 1) {
+                robotRadiusGrow = !robotRadiusGrow;
+              }
+            };
+
             // create the draw function
             var draw = function() {
               // grab the drawing context
@@ -216,8 +246,7 @@
                 // draw the click point
                 context.fillStyle = nav2D.clickColor;
                 context.beginPath();
-                context.arc(clickX, clickY, clickRadius, 0, Math.PI * 2,
-                    true);
+                context.arc(clickX, clickY, clickRadius, 0, Math.PI * 2,true);
                 context.closePath();
                 context.fill();
 
@@ -235,21 +264,7 @@
               }
 
               // draw the robot location
-              context.fillStyle = nav2D.robotColor;
-              context.beginPath();
-              context.arc(robotX, robotY, robotRadius, 0, Math.PI * 2, true);
-              context.closePath();
-              context.fill();
-
-              // grow and shrink the icon
-              if (robotRadiusGrow) {
-                robotRadius++;
-              } else {
-                robotRadius--;
-              }
-              if (robotRadius == maxRobotRadius || robotRadius == 1) {
-                robotRadiusGrow = !robotRadiusGrow;
-              }
+              nav2D.drawrobot(context,robotX,robotY,robotRotZ);
             };
 
             // get the position in the world from a point clicked by the user
