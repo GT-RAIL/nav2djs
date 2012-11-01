@@ -232,29 +232,46 @@
               context.restore();
             };
 
+            var goalsize = 4;
+            var goalinc = 0.5;
             nav2D.drawgoal = function(context)
             {
-              /*
               var angle;
 
-              if(nav2D.mode == 'inset') {
-                if(clickZX == clickX)
-                  angle = 0;
-                else
-                  angle = (clickZY - clickY) / (clickZX-clickX);
-              }
-              else if(nav2D.mode == 'moving')
-              {
-              }
+              if(nav2D.mode == 'insetgoal' || nav2D.mode == 'insetinit' || nav2D.mode == 'moving') {
+                angle = Math.atan2((clickZY - clickY),(clickZX-clickX));
 
-              nav2D.drawtriangle();
-              context.save();
-              context.translate(clickX,clickY);
-              context.rotate(angle);
-              context.lineTo(-20,20);
-              context.restore();
-            }
-*/
+                context.save();
+                context.fillStyle = '#FA0';
+                context.strokeStyle = '#FA0';
+                context.lineWidth = 4;
+                context.translate(clickX,clickY);
+                context.rotate(angle);
+                nav2D.drawTriangle(context,goalsize);
+                context.restore();
+
+                if(nav2D.mode == 'moving') {
+                  if(goalsize == 5)
+                    goalinc = -0.5;
+                  else if(goalsize == 1)
+                    goalinc = 0.5;
+  
+                  goalsize += goalinc;
+                }
+              }
+            };
+
+            nav2D.drawTriangle = function(context,size) {
+              context.beginPath();
+              context.lineTo(0,3+size);
+              context.lineTo(15+size,0);
+              context.lineTo(0,-3-size);
+              context.lineTo(0,0);
+              context.fill();
+              context.stroke();
+              context.closePath();
+            };
+            /*
               // check if the user clicked yet
               if (clickX && clickY && nav2D.mode == 'none') {
                 // draw the click point
@@ -277,7 +294,7 @@
                 clickUpdate = !clickUpdate;
               }
             };
-
+*/
             // create the draw function
             var draw = function() {
               // grab the drawing context
@@ -330,7 +347,7 @@
             };
 
             // a function to send the robot to the given goal location
-            nav2D.sendGoalPose = function(x, y) {
+            nav2D.sendGoalPose = function(x, y,quat) {
               // create a goal
               var goal = new actionClient.Goal({
                 target_pose : {
@@ -344,10 +361,10 @@
                       z : 0
                     },
                     orientation : {
-                      x : 0,
-                      y : 0,
-                      z : 0.6,
-                      w : 0.8
+                      x : quat[0],
+                      y : quat[1],
+                      z : quat[2],
+                      w : quat[3]
                     }
                   }
                 }
@@ -372,9 +389,29 @@
                 nav2D.emit('feedback', feedback);
               });
             };
-/*
-            nav2D.ismousedown = false;
+
+           nav2D.getQuatFromRPY = function(roll,pitch,yaw) {
+             var halfyaw = yaw * 0.5;
+             var halfpitch = pitch * 0.5;
+             var halfroll = roll * 0.5;
+             var cosyaw = Math.cos(halfyaw);
+             var sinyaw = Math.sin(halfyaw);
+             var cospitch = Math.cos(halfpitch);
+             var sinpitch = Math.sin(halfpitch);
+             var cosroll = Math.cos(halfroll);
+             var sinroll = Math.sin(halfroll);
+             var value = [ sinroll * cospitch * cosyaw - cosroll * sinpitch * sinyaw, // x
+                           cosroll * sinpitch * cosyaw + sinroll * cospitch * sinyaw, // y
+                           cosroll * cospitch * sinyaw - sinroll * sinpitch * cosyaw, // z
+                           cosroll * cospitch * cosyaw + sinroll * sinpitch * sinyaw]; // w
+
+             return value;
+           }
+
+           nav2D.ismousedown = false;
            canvas.addEventListener('mousedown',function(event) {
+               
+              if(nav2D.mode == 'goal' || nav2D.mode =='init') {
               var poses = nav2D.getPoseFromEvent(event);
 
               goalX = poses[0];
@@ -382,60 +419,53 @@
               clickX = clickZX = poses[2];
               clickY = clickZY = poses[3];
 
-//              nav2D.ismousedown = true;
-              nav2D.mode = 'inset';
-             });
+              if(nav2D.mode =='goal') {
+                nav2D.ismousedown = true;
+                nav2D.mode = 'insetgoal';
+              }
+              else if(nav2D.mode == 'init') {
+                nav2D.ismousedown = true;
+                nav2D.mode = 'insetinit';
+              }
+              else {
+                nav2D.emit('error','mode error');
+              }
+              }
+            });
 
            canvas.addEventListener('mousemove',function(event) {
                if(nav2D.ismousedown) {
-               console.log(event);
-               var poses = nav2D.getPoseFromEvent(event);
-               clickZX = poses[0];
-               clickZY = poses[1];
+                 var poses = nav2D.getPoseFromEvent(event);
+                 clickZX = poses[2];
+                 clickZY = poses[3];
                }
              });
 
            canvas.addEventListener('mouseup',function(event) {
-              var poses = nav2D.getPoseFromEvent(event);
-              goalZX = poses[0];
-              goalZY = poses[1];
-              clickZX = poses[0];
-              clickZY = poses[1];
-              nav2D.ismousedown = false;
-              nav2D.sendGoalPose(goalX, goalY);
-              nav2D.mode = 'moving';
-            });
+              if(nav2D.ismousedown) {
+                var poses = nav2D.getPoseFromEvent(event);
+                goalZX = poses[0];
+                goalZY = poses[1];
+                clickZX = poses[2];
+                clickZY = poses[3];
+                 
+                var angle = Math.atan2((clickZY - clickY),(clickZX-clickX));
+                var quat = nav2D.getQuatFromRPY(0,0,-angle);
 
-           */
+                nav2D.ismousedown = false;
 
-           canvas.addEventListener('click',function(event) {
-             if(nav2D.mode == 'none') {           }
-             else if(nav2D.mode == 'init') 
-             {
-               var poses = nav2D.getPoseFromEvent(event);
-               clickX = poses[2];
-               clickY = poses[3];
-               if (poses != null) {
-                 nav2D.sendInitPose(poses[0], poses[1]);
-               } else {
-                 nav2D.emit('error',"All of the necessary navigation information is not yet available."); 
-               }
-             }
-             else if(nav2D.mode == 'goal') {
-               var poses = nav2D.getPoseFromEvent(event);
-               if (poses != null) {
-                 clickX = poses[2];
-                 clickY = poses[3];
-
-                 nav2D.sendGoalPose(poses[0], poses[1]);
-               } else {
-                 nav2D.emit('error',"All of the necessary navigation information is not yet available.");
-               }
-             }
-             else {
-               nav2D.emit('error',"Wrong mode..");
-             }
-             nav2D.mode = 'none';
+                if(nav2D.mode == 'insetinit') {
+                  nav2D.sendInitPose(goalX, goalY,quat);
+                }
+                else if(nav2D.mode == 'insetgoal')
+                {
+                  nav2D.sendGoalPose(goalX, goalY,quat);
+                  nav2D.mode = 'moving';
+                }
+                else {
+                  nav2D.emit('error','mode error');
+                }
+              }
             });
 
             nav2D.setmode = function(mode) {
@@ -449,7 +479,7 @@
               type : 'geometry_msgs/PoseWithCovarianceStamped',
             });
 
-            nav2D.sendInitPose = function(x,y) {
+            nav2D.sendInitPose = function(x,y,quat) {
               var pose_msg = new ros.Message({
                 header : {
                     frame_id : '/map'
@@ -462,10 +492,10 @@
                       z : 0,
                     },
                     orientation : {
-                      x : 0,
-                      y : 0,
-                      z : 0,
-                      w : 1,
+                      x : quat[0],
+                      y : quat[1],
+                      z : quat[2],
+                      w : quat[3],
                     },
                   },
                   covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -481,7 +511,8 @@
                     function(event) {
                       var poses = nav2D.getPoseFromEvent(event);
                       if (poses != null) {
-                        nav2D.sendGoalPose(poses[0], poses[1]);
+                        var quat = nav2D.getQuatFromRPY(0,0,0);
+                        nav2D.sendGoalPose(poses[0], poses[1],quat);
                       } else {
                         nav2D
                             .emit('error',
