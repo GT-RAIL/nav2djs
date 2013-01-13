@@ -1,9 +1,0 @@
-<stack>
-	<description brief="2D Navigation Widget written for rosjs.">2D Navigation Widget written for rosjs. </description>
-	<author>Russell Toris</author>
-	<license>BSD</license>  
-	<review status="unreviewed" notes="" />
-	<url>http://ros.org/wiki/nav2djs</url>
-
-	<depend stack="ros" />
-</stack>
