@@ -34,6 +34,7 @@
             nav2D.clickColor = options.clickColor || '#543210';
             nav2D.robotColor = options.robotColor || '#012345';
             nav2D.initialPoseTopic = options.initialPoseTopic || '/initialpose';
+            nav2D.readOnly = options.readOnly;
 
             // draw robot 
             nav2D.drawrobot = options.drawrobot;
@@ -369,19 +370,22 @@
               nav2D.setmode('none');
             };
 
-            canvas
-                .addEventListener(
-                    'dblclick',
-                    function(event) {
-                      var poses = nav2D.getPoseFromEvent(event);
-                      if (poses != null) {
-                        nav2D.sendGoalPose(poses[0], poses[1]);
-                      } else {
-                        nav2D
-                            .emit('error',
-                                "All of the necessary navigation information is not yet available.");
-                      }
-                    });
+            // check for read only
+            if(!nav2D.readOnly) {
+              canvas
+                  .addEventListener(
+                      'dblclick',
+                      function(event) {
+                        var poses = nav2D.getPoseFromEvent(event);
+                        if (poses != null) {
+                          nav2D.sendGoalPose(poses[0], poses[1]);
+                        } else {
+                          nav2D
+                              .emit('error',
+                                  "All of the necessary navigation information is not yet available.");
+                        }
+                      });
+            }
           };
           Nav2D.prototype.__proto__ = EventEmitter2.prototype;
           return Nav2D;
