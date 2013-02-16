@@ -34,6 +34,7 @@
             nav2D.clickColor = options.clickColor || '#543210';
             nav2D.robotColor = options.robotColor || '#012345';
             nav2D.initialPoseTopic = options.initialPoseTopic || '/initialpose';
+            nav2D.readOnly = options.readOnly;
 
             // draw robot 
             nav2D.drawrobot = options.drawrobot;
@@ -61,10 +62,10 @@
             var clickY;
 
             // map and metadata
-            var map;
-            var mapWidth;
-            var mapHeight;
-            var mapResolution;
+            var map = null;
+            var mapWidth = null;
+            var mapHeight = null;
+            var mapResolution = null;
             var mapX;
             var mapY;
             var drawInterval;
@@ -153,8 +154,6 @@
                       available = true;
                       // notify the user we are available
                       nav2D.emit('available');
-                      // set the interval for the draw function
-                      drawInterval = setInterval(draw, 30);
                     }
                   }
                 });
@@ -203,33 +202,57 @@
               var width = canvas.getAttribute('width');
               var height = canvas.getAttribute('height');
 
-              // add the image back to the canvas
-              context.drawImage(map, 0, 0, width, height);
-
-              // check if the user clicked yet
-              if (clickX && clickY && nav2D.mode == 'none') {
-                // draw the click point
-                context.fillStyle = nav2D.clickColor;
-                context.beginPath();
-                context.arc(clickX, clickY, clickRadius, 0, Math.PI * 2,true);
-                context.closePath();
-                context.fill();
-
-                // grow half the speed of the refresh rate
-                if (clickUpdate) {
-                  clickRadius++;
-                }
-
-                // reset at the threshold (i.e., blink)
-                if (clickRadius == maxClickRadius) {
-                  clickRadius = 1;
-                }
-
-                clickUpdate = !clickUpdate;
+              // check if we have the info we need
+              var waiting = '';
+              if (!map) {
+                waiting = 'Waiting for the robot\'s internal map...';
+              } else if (!mapResolution) {
+                waiting = 'Waiting for the robot\'s map metadata...';
+              } else if (!robotX || !robotY) {
+                waiting = 'Waiting for the robot\'s position...';
               }
 
-              // draw the robot location
-              nav2D.drawrobot(context,robotX,robotY,robotRotZ);
+              context.clearRect(0, 0, width, height);
+
+              if (waiting.length === 0) {
+                // add the image back to the canvas
+                context.drawImage(map, 0, 0, width, height);
+
+                // check if the user clicked yet
+                if (clickX && clickY && nav2D.mode == 'none') {
+                  // draw the click point
+                  context.fillStyle = nav2D.clickColor;
+                  context.beginPath();
+                  context.arc(clickX, clickY, clickRadius, 0, Math.PI * 2,true);
+                  context.closePath();
+                  context.fill();
+
+                  // grow half the speed of the refresh rate
+                  if (clickUpdate) {
+                    clickRadius++;
+                  }
+
+                  // reset at the threshold (i.e., blink)
+                  if (clickRadius == maxClickRadius) {
+                    clickRadius = 1;
+                  }
+
+                  clickUpdate = !clickUpdate;
+                }
+
+                // draw the robot location
+                nav2D.drawrobot(context,robotX,robotY,robotRotZ);
+              } else {
+                // let the user know what we need
+                canvas.style.background = '#333333';
+                // set the text
+                context.lineWidth = 4;
+                context.fillStyle = '#ffffff';
+                context.font = '40px sans-serif';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(waiting, width / 2, height / 2);
+              }
             };
 
             // get the position in the world from a point clicked by the user
@@ -279,8 +302,8 @@
                     orientation : {
                       x : 0,
                       y : 0,
-                      z : 0.6,
-                      w : 0.8
+                      z : 0,
+                      w : 1.0
                     }
                   }
                 }
@@ -369,19 +392,25 @@
               nav2D.setmode('none');
             };
 
-            canvas
-                .addEventListener(
-                    'dblclick',
-                    function(event) {
-                      var poses = nav2D.getPoseFromEvent(event);
-                      if (poses != null) {
-                        nav2D.sendGoalPose(poses[0], poses[1]);
-                      } else {
-                        nav2D
-                            .emit('error',
-                                "All of the necessary navigation information is not yet available.");
-                      }
-                    });
+            // check for read only
+            if(!nav2D.readOnly) {
+              canvas
+                  .addEventListener(
+                      'dblclick',
+                      function(event) {
+                        var poses = nav2D.getPoseFromEvent(event);
+                        if (poses != null) {
+                          nav2D.sendGoalPose(poses[0], poses[1]);
+                        } else {
+                          nav2D
+                              .emit('error',
+                                  "All of the necessary navigation information is not yet available.");
+                        }
+                      });
+            }
+            
+            // set the interval for the draw function
+            drawInterval = setInterval(draw, 30);
           };
           Nav2D.prototype.__proto__ = EventEmitter2.prototype;
           return Nav2D;
