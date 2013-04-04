@@ -37,11 +37,36 @@ NAV2D.Navigator = function(options) {
     });
     goal.send();
 
-    goal.on('status', function(status) {
-      console.log(status);
+    // create a marker for the goal
+    var goalMarker = new ROS2D.NavigationArrow({
+      size : 8,
+      strokeSize : 1,
+      fillColor : createjs.Graphics.getRGB(255, 64, 128, 0.66)
     });
-    goal.on('feedback', function(feedback) {
-      console.log(feedback);
+    goalMarker.x = pose.position.x;
+    goalMarker.y = -pose.position.y;
+    goalMarker.rotation = stage.rosQuaternionToGlobalTheta(pose.orientation);
+    goalMarker.scaleX = 1.0 / stage.scaleX;
+    goalMarker.scaleY = 1.0 / stage.scaleY;
+    that.rootObject.addChild(goalMarker);
+
+    // have the model "pulse"
+    var growCount = 0;
+    var growing = true;
+    createjs.Ticker.addEventListener('tick', function() {
+      if (growing) {
+        goalMarker.scaleX *= 1.035;
+        goalMarker.scaleY *= 1.035;
+        growing = (++growCount < 10);
+      } else {
+        goalMarker.scaleX /= 1.035;
+        goalMarker.scaleY /= 1.035;
+        growing = (--growCount < 0);
+      }
+    });
+    
+    goal.on('result', function() {
+      that.rootObject.removeChild(goalMarker);
     });
   };
 
@@ -61,6 +86,23 @@ NAV2D.Navigator = function(options) {
   // wait for a pose to come in first
   robotMarker.visible = false;
   this.rootObject.addChild(robotMarker);
+  var initScaleSet = false;
+  // have the model "pulse"
+  var growCount = 0;
+  var growing = true;
+  createjs.Ticker.addEventListener('tick', function() {
+    if (initScaleSet) {
+      if (growing) {
+        robotMarker.scaleX *= 1.035;
+        robotMarker.scaleY *= 1.035;
+        growing = (++growCount < 10);
+      } else {
+        robotMarker.scaleX /= 1.035;
+        robotMarker.scaleY /= 1.035;
+        growing = (--growCount < 0);
+      }
+    }
+  });
 
   // setup a listener for the robot pose
   var poseListener = new ROSLIB.Topic({
@@ -73,8 +115,11 @@ NAV2D.Navigator = function(options) {
     // update the robots position on the map
     robotMarker.x = pose.position.x;
     robotMarker.y = -pose.position.y;
-    robotMarker.scaleX = 1.0 / stage.scaleX;
-    robotMarker.scaleY = 1.0 / stage.scaleY;
+    if (!initScaleSet) {
+      robotMarker.scaleX = 1.0 / stage.scaleX;
+      robotMarker.scaleY = 1.0 / stage.scaleY;
+      initScaleSet = true;
+    }
 
     // change the angle
     robotMarker.rotation = stage.rosQuaternionToGlobalTheta(pose.orientation);
