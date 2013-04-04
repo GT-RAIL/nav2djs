@@ -11,6 +11,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
   this.serverName = options.serverName || '/move_base';
   this.actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   this.rootObject = options.rootObject || new createjs.Container();
+  this.viewer = options.viewer;
 
   this.navigator = null;
 
@@ -27,5 +28,8 @@ NAV2D.OccupancyGridClientNav = function(options) {
       actionName : that.actionName,
       rootObject : that.rootObject
     });
+    
+    // scale the viewer to fit the map
+    that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
   });
 };
