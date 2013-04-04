@@ -10,6 +10,41 @@ NAV2D.Navigator = function(options) {
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   this.rootObject = options.rootObject || new createjs.Container();
 
+  // setup the actionlib client
+  var actionClient = new ROSLIB.ActionClient({
+    ros : ros,
+    actionName : actionName,
+    serverName : serverName
+  });
+
+  /**
+   * Send a goal to the navigation stack with the given pose.
+   * 
+   * @param pose - the goal pose
+   */
+  var sendGoal = function(pose) {
+    // create a goal
+    var goal = new ROSLIB.Goal({
+      actionClient : actionClient,
+      goalMessage : {
+        target_pose : {
+          header : {
+            frame_id : '/map'
+          },
+          pose : pose
+        }
+      }
+    });
+    goal.send();
+
+    goal.on('status', function(status) {
+      console.log(status);
+    });
+    goal.on('feedback', function(feedback) {
+      console.log(feedback);
+    });
+  };
+
   // get a handle to the stage
   if (that.rootObject instanceof createjs.Stage) {
     var stage = that.rootObject;
@@ -51,6 +86,10 @@ NAV2D.Navigator = function(options) {
   this.rootObject.addEventListener('dblclick', function(event) {
     // convert to ROS coordinates
     var coords = stage.globalToRos(event.stageX, event.stageY);
-    console.log(coords);
+    var pose = new ROSLIB.Pose({
+      position : new ROSLIB.Vector3(coords)
+    });
+    // send the goal
+    sendGoal(pose);
   });
 };
