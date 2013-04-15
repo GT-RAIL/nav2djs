@@ -3,7 +3,7 @@
  */
 
 var NAV2D = NAV2D || {
-  REVISION : '1'
+  REVISION : '2-devel'
 };
 
 /**
