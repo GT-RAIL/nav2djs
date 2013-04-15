@@ -1,4 +1,4 @@
 .project
 .settings
-.svn
-
+.vagrant
+node_modules
