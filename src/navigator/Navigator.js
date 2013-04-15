@@ -4,7 +4,7 @@
 
 NAV2D.Navigator = function(options) {
   var that = this;
-  var options = options || {};
+  options = options || {};
   var ros = options.ros;
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
@@ -19,7 +19,7 @@ NAV2D.Navigator = function(options) {
 
   /**
    * Send a goal to the navigation stack with the given pose.
-   * 
+   *
    * @param pose - the goal pose
    */
   var sendGoal = function(pose) {
@@ -71,10 +71,11 @@ NAV2D.Navigator = function(options) {
   };
 
   // get a handle to the stage
+  var stage;
   if (that.rootObject instanceof createjs.Stage) {
-    var stage = that.rootObject;
+    stage = that.rootObject;
   } else {
-    var stage = that.rootObject.getStage();
+    stage = that.rootObject.getStage();
   }
 
   // marker for the robot

@@ -4,7 +4,7 @@
 
 NAV2D.OccupancyGridClientNav = function(options) {
   var that = this;
-  var options = options || {};
+  options = options || {};
   this.ros = options.ros;
   var topic = options.topic || '/map';
   var continuous = options.continuous;
