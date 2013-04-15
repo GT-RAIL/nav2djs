@@ -5,6 +5,7 @@
 var NAV2D = NAV2D || {
   REVISION : '1'
 };
+
 /**
  * @author Russell Toris - rctoris@wpi.edu
  */
@@ -145,6 +146,7 @@ NAV2D.Navigator = function(options) {
     sendGoal(pose);
   });
 };
+
 /**
  * @author Russell Toris - rctoris@wpi.edu
  */
