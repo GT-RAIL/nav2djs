@@ -10,12 +10,33 @@ var ROS2D = ROS2D || {
 createjs.Stage.prototype.globalToRos = function(x, y) {
   var rosX = x / this.scaleX;
   // change Y direction
-  var rosY = this.y - (y / this.scaleY);
+  var rosY = (this.y - y) / this.scaleY;
   return {
     x : rosX,
     y : rosY
   };
 };
+
+// convert a ROS quaternion to theta in degrees
+createjs.Stage.prototype.rosQuaternionToGlobalTheta = function(orientation) {
+  // convert to radians
+  var q0 = orientation.w;
+  var q1 = orientation.x;
+  var q2 = orientation.y;
+  var q3 = orientation.z;
+  var theta = Math.atan2(2 * (q0 * q3 + q1 * q2), 1 - 2 * (Math.pow(q2, 2) + Math.pow(q3, 2)));
+
+  // convert to degrees
+  var deg = theta * (180.0 / Math.PI);
+  if (deg >= 0 && deg <= 180) {
+    deg += 270;
+  } else {
+    deg -= 90;
+  }
+
+  return -deg;
+};
+
 /**
  * @author Russell Toris - rctoris@wpi.edu
  */
@@ -28,7 +49,7 @@ createjs.Stage.prototype.globalToRos = function(x, y) {
  *   * message - the occupancy grid message
  */
 ROS2D.OccupancyGrid = function(options) {
-  var options = options || {};
+  options = options || {};
   var message = options.message;
 
   // internal drawing canvas
@@ -54,12 +75,13 @@ ROS2D.OccupancyGrid = function(options) {
       var mapI = col + ((this.height - row - 1) * this.width);
       // determine the value
       var data = message.data[mapI];
+      var val;
       if (data === 100) {
-        var val = 0;
+        val = 0;
       } else if (data === 0) {
-        var val = 255;
+        val = 255;
       } else {
-        var val = 127;
+        val = 127;
       }
 
       // determine the index into the image data array
@@ -86,16 +108,17 @@ ROS2D.OccupancyGrid = function(options) {
   this.height *= this.scaleY;
 };
 ROS2D.OccupancyGrid.prototype.__proto__ = createjs.Bitmap.prototype;
+
 /**
  * @author Russell Toris - rctoris@wpi.edu
  */
 
 /**
  * A map that listens to a given occupancy grid topic.
- * 
+ *
  * Emits the following events:
- *  * 'change' - there was an update or change in the map
- *  
+ *   * 'change' - there was an update or change in the map
+ *
  * @constructor
  * @param options - object with following keys:
  *   * ros - the ROSLIB.Ros connection handle
@@ -105,7 +128,7 @@ ROS2D.OccupancyGrid.prototype.__proto__ = createjs.Bitmap.prototype;
  */
 ROS2D.OccupancyGridClient = function(options) {
   var that = this;
-  var options = options || {};
+  options = options || {};
   var ros = options.ros;
   var topic = options.topic || '/map';
   this.continuous = options.continuous;
@@ -141,28 +164,68 @@ ROS2D.OccupancyGridClient = function(options) {
   });
 };
 ROS2D.OccupancyGridClient.prototype.__proto__ = EventEmitter2.prototype;
+
+/**
+ * @author Russell Toris - rctoris@wpi.edu
+ */
+
+/**
+ * A navigation arrow is a directed triangle that can be used to display orientation.
+ *
+ * @constructor
+ * @param options - object with following keys:
+ *   * size (optional) - the size of the marker
+ *   * strokeSize (optional) - the size of the outline
+ *   * strokeColor (optional) - the createjs color for the stroke
+ *   * fillColor (optional) - the createjs color for the fill
+ *   * pulse (optional) - if the marker should "pulse" over time
+ */
 ROS2D.NavigationArrow = function(options) {
-  var options = options || {};
-  var size = options.size || 0.5;
-  
+  var that = this;
+  options = options || {};
+  var size = options.size || 10;
+  var strokeSize = options.strokeSize || 3;
+  var strokeColor = options.strokeColor || createjs.Graphics.getRGB(0, 0, 0);
+  var fillColor = options.fillColor || createjs.Graphics.getRGB(255, 0, 0);
+  var pulse = options.pulse;
+
   // draw the arrow
   var graphics = new createjs.Graphics();
   // line width
-  graphics.setStrokeStyle(size);
-  graphics.moveTo(-size, -size);
-  graphics.beginStroke(createjs.Graphics.getRGB(0,0,0));
-  graphics.beginFill(createjs.Graphics.getRGB(255,0,0));
-  graphics.lineTo(0, size * 2);
-  graphics.lineTo(size, -size);
-  graphics.lineTo(-size, -size);
+  graphics.setStrokeStyle(strokeSize);
+  graphics.moveTo(-size / 2.0, size / 2.0);
+  graphics.beginStroke(strokeColor);
+  graphics.beginFill(fillColor);
+  graphics.lineTo(0, -size);
+  graphics.lineTo(size / 2.0, size / 2.0);
+  graphics.lineTo(-size / 2.0, size / 2.0);
   graphics.closePath();
   graphics.endFill();
   graphics.endStroke();
-  
+
   // create the shape
   createjs.Shape.call(this, graphics);
+  
+  // check if we are pulsing
+  if (pulse) {
+    // have the model "pulse"
+    var growCount = 0;
+    var growing = true;
+    createjs.Ticker.addEventListener('tick', function() {
+      if (growing) {
+        that.scaleX *= 1.035;
+        that.scaleY *= 1.035;
+        growing = (++growCount < 10);
+      } else {
+        that.scaleX /= 1.035;
+        that.scaleY /= 1.035;
+        growing = (--growCount < 0);
+      }
+    });
+  }
 };
 ROS2D.NavigationArrow.prototype.__proto__ = createjs.Shape.prototype;
+
 /**
  * @author Russell Toris - rctoris@wpi.edu
  */
@@ -172,27 +235,25 @@ ROS2D.NavigationArrow.prototype.__proto__ = createjs.Shape.prototype;
  *
  * @constructor
  * @param options - object with following keys:
- *  * divID - the ID of the div to place the viewer in
- *  * width - the initial width, in pixels, of the canvas
- *  * height - the initial height, in pixels, of the canvas
- *  * background (optional) - the color to render the background, like #efefef
- *  * resolution (optional) - the pixels per meter resolution
+ *   * divID - the ID of the div to place the viewer in
+ *   * width - the initial width, in pixels, of the canvas
+ *   * height - the initial height, in pixels, of the canvas
+ *   * background (optional) - the color to render the background, like '#efefef'
  */
 ROS2D.Viewer = function(options) {
   var that = this;
-  var options = options || {};
-  this.divID = options.divID;
+  options = options || {};
+  var divID = options.divID;
   this.width = options.width;
   this.height = options.height;
-  this.resolution = options.resolution || 0.05;
-  this.background = options.background || '#111111';
+  var background = options.background || '#111111';
 
   // create the canvas to render to
   var canvas = document.createElement('canvas');
   canvas.width = this.width;
   canvas.height = this.height;
-  canvas.style.background = this.background;
-  document.getElementById(this.divID).appendChild(canvas);
+  canvas.style.background = background;
+  document.getElementById(divID).appendChild(canvas);
   // create the easel to use
   this.scene = new createjs.Stage(canvas);
 
@@ -200,7 +261,7 @@ ROS2D.Viewer = function(options) {
   this.scene.y = this.height;
 
   // add the renderer to the page
-  document.getElementById(this.divID).appendChild(canvas);
+  document.getElementById(divID).appendChild(canvas);
 
   // update at 30fps
   createjs.Ticker.setFPS(30);
@@ -211,7 +272,7 @@ ROS2D.Viewer = function(options) {
 
 /**
  * Add the given createjs object to the global scene in the viewer.
- * 
+ *
  * @param object - the object to add
  */
 ROS2D.Viewer.prototype.addObject = function(object) {
@@ -220,7 +281,7 @@ ROS2D.Viewer.prototype.addObject = function(object) {
 
 /**
  * Scale the scene to fit the given width and height into the current canvas.
- * 
+ *
  * @param width - the width to scale to in meters
  * @param height - the height to scale to in meters
  */

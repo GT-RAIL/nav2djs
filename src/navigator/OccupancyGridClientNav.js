@@ -2,6 +2,20 @@
  * @author Russell Toris - rctoris@wpi.edu
  */
 
+/**
+ * A OccupancyGridClientNav uses an OccupancyGridClient to create a map for use with a Navigator.
+ *
+ * @constructor
+ * @param options - object with following keys:
+ *   * ros - the ROSLIB.Ros connection handle
+ *   * topic (optional) - the map topic to listen to
+ *   * rootObject (optional) - the root object to add this marker to
+ *   * continuous (optional) - if the map should be continuously loaded (e.g., for SLAM)
+ *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
+ *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
+ *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
+ *   * viewer - the main viewer to render to
+ */
 NAV2D.OccupancyGridClientNav = function(options) {
   var that = this;
   options = options || {};
