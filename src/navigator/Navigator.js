@@ -2,9 +2,19 @@
  * @author Russell Toris - rctoris@wpi.edu
  */
 
+/**
+ * A navigator can be used to add click-to-navigate options to an object.
+ *
+ * @constructor
+ * @param options - object with following keys:
+ *   * ros - the ROSLIB.Ros connection handle
+ *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
+ *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
+ *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
+ */
 NAV2D.Navigator = function(options) {
   var that = this;
-  var options = options || {};
+  options = options || {};
   var ros = options.ros;
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
@@ -19,10 +29,10 @@ NAV2D.Navigator = function(options) {
 
   /**
    * Send a goal to the navigation stack with the given pose.
-   * 
+   *
    * @param pose - the goal pose
    */
-  var sendGoal = function(pose) {
+  function sendGoal(pose) {
     // create a goal
     var goal = new ROSLIB.Goal({
       actionClient : actionClient,
@@ -41,7 +51,8 @@ NAV2D.Navigator = function(options) {
     var goalMarker = new ROS2D.NavigationArrow({
       size : 8,
       strokeSize : 1,
-      fillColor : createjs.Graphics.getRGB(255, 64, 128, 0.66)
+      fillColor : createjs.Graphics.getRGB(255, 64, 128, 0.66),
+      pulse : true
     });
     goalMarker.x = pose.position.x;
     goalMarker.y = -pose.position.y;
@@ -50,59 +61,30 @@ NAV2D.Navigator = function(options) {
     goalMarker.scaleY = 1.0 / stage.scaleY;
     that.rootObject.addChild(goalMarker);
 
-    // have the model "pulse"
-    var growCount = 0;
-    var growing = true;
-    createjs.Ticker.addEventListener('tick', function() {
-      if (growing) {
-        goalMarker.scaleX *= 1.035;
-        goalMarker.scaleY *= 1.035;
-        growing = (++growCount < 10);
-      } else {
-        goalMarker.scaleX /= 1.035;
-        goalMarker.scaleY /= 1.035;
-        growing = (--growCount < 0);
-      }
-    });
-    
     goal.on('result', function() {
       that.rootObject.removeChild(goalMarker);
     });
-  };
+  }
 
   // get a handle to the stage
+  var stage;
   if (that.rootObject instanceof createjs.Stage) {
-    var stage = that.rootObject;
+    stage = that.rootObject;
   } else {
-    var stage = that.rootObject.getStage();
+    stage = that.rootObject.getStage();
   }
 
   // marker for the robot
   var robotMarker = new ROS2D.NavigationArrow({
     size : 12,
     strokeSize : 1,
-    fillColor : createjs.Graphics.getRGB(255, 128, 0, 0.66)
+    fillColor : createjs.Graphics.getRGB(255, 128, 0, 0.66),
+    pulse : true
   });
   // wait for a pose to come in first
   robotMarker.visible = false;
   this.rootObject.addChild(robotMarker);
   var initScaleSet = false;
-  // have the model "pulse"
-  var growCount = 0;
-  var growing = true;
-  createjs.Ticker.addEventListener('tick', function() {
-    if (initScaleSet) {
-      if (growing) {
-        robotMarker.scaleX *= 1.035;
-        robotMarker.scaleY *= 1.035;
-        growing = (++growCount < 10);
-      } else {
-        robotMarker.scaleX /= 1.035;
-        robotMarker.scaleY /= 1.035;
-        growing = (--growCount < 0);
-      }
-    }
-  });
 
   // setup a listener for the robot pose
   var poseListener = new ROSLIB.Topic({
