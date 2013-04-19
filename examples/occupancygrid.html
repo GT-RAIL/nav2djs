@@ -21,8 +21,8 @@
     // Create the main viewer.
     var viewer = new ROS2D.Viewer({
       divID : 'nav',
-      width : 350,
-      height : 400
+      width : 1024,
+      height : 500
     });
 
     // Setup the nav client.
@@ -30,7 +30,7 @@
       ros : ros,
       rootObject : viewer.scene,
       viewer : viewer,
-      serverName : '/pr2_move_base'
+      serverName : '/move_base'
     });
   }
 </script>
