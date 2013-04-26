@@ -22,7 +22,7 @@ nav2djs depends on:
 
 [EaselJS](https://github.com/CreateJS/EaselJS/). The current supported version is 0.6.0. The current supported version can be found [in this project](include/EaselJS/easeljs.js) or on the Robot Web Tools CDN: ([full](http://cdn.robotwebtools.org/EaselJS/0.6.0/easeljs.js)) | ([min](http://cdn.robotwebtools.org/EaselJS/0.6.0/easeljs.min.js))
 
-[ros2djs](https://github.com/RobotWebTools/ros2djs). The current supported version is r1. The current supported version can be found [in this project](include/ros2djs/ros2d.js) or on the Robot Web Tools CDN: ([full](http://cdn.robotwebtools.org/ros2djs/r1/ros2d.js)) | ([min](http://cdn.robotwebtools.org/ros2djs/r1/ros2d.min.js))
+[ros2djs](https://github.com/RobotWebTools/ros2djs). The current supported version is r2. The current supported version can be found [in this project](include/ros2djs/ros2d.js) or on the Robot Web Tools CDN: ([full](http://cdn.robotwebtools.org/ros2djs/r2/ros2d.js)) | ([min](http://cdn.robotwebtools.org/ros2djs/r2/ros2d.min.js))
 
 ### Build
 Checkout [utils/README.md](utils/README.md) for details on building.
