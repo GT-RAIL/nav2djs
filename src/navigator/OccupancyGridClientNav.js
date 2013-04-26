@@ -33,7 +33,8 @@ NAV2D.OccupancyGridClientNav = function(options) {
   var client = new ROS2D.OccupancyGridClient({
     ros : this.ros,
     rootObject : this.rootObject,
-    continuous : continuous
+    continuous : continuous,
+    topic : topic
   });
   client.on('change', function() {
     that.navigator = new NAV2D.Navigator({
