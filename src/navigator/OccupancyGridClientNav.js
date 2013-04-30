@@ -33,7 +33,8 @@ NAV2D.OccupancyGridClientNav = function(options) {
   var client = new ROS2D.OccupancyGridClient({
     ros : this.ros,
     rootObject : this.rootObject,
-    continuous : continuous
+    continuous : continuous,
+    topic : topic
   });
   client.on('change', function() {
     that.navigator = new NAV2D.Navigator({
@@ -44,6 +45,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
     });
     
     // scale the viewer to fit the map
+    that.viewer.shift(client.currentGrid.pose.position.x, client.currentGrid.pose.position.y);
     that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
   });
 };
