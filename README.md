@@ -1,4 +1,4 @@
-nav2djs [![Build Status](https://api.travis-ci.org/WPI-RAIL/ros2djs.png)](https://travis-ci.org/WPI-RAIL/ros2djs)
+nav2djs [![Build Status](https://api.travis-ci.org/WPI-RAIL/nav2djs.png)](https://travis-ci.org/WPI-RAIL/nav2djs)
 =======
 
 #### 2D Navigation Widget
