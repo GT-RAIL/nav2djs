@@ -36,9 +36,10 @@ NAV2D.OccupancyGridClientNav = function(options) {
     continuous : continuous,
     topic : topic
   });
-  client.on('change', function() {
+  client.on('change', function(map_origin) {
     that.navigator = new NAV2D.Navigator({
       ros : that.ros,
+      map_origin : map_origin,
       serverName : that.serverName,
       actionName : that.actionName,
       rootObject : that.rootObject

@@ -8,6 +8,7 @@
  * @constructor
  * @param options - object with following keys:
  *   * ros - the ROSLIB.Ros connection handle
+ *   * map_origin - the origin of map(ROSLIB.Pose)
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
@@ -16,6 +17,7 @@ NAV2D.Navigator = function(options) {
   var that = this;
   options = options || {};
   var ros = options.ros;
+  var map_origin = options.map_origin;
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   this.rootObject = options.rootObject || new createjs.Container();
@@ -54,8 +56,8 @@ NAV2D.Navigator = function(options) {
       fillColor : createjs.Graphics.getRGB(255, 64, 128, 0.66),
       pulse : true
     });
-    goalMarker.x = pose.position.x;
-    goalMarker.y = -pose.position.y;
+    goalMarker.x = pose.position.x - map_origin.position.x;
+    goalMarker.y = -(pose.position.y  - map_origin.position.y);
     goalMarker.rotation = stage.rosQuaternionToGlobalTheta(pose.orientation);
     goalMarker.scaleX = 1.0 / stage.scaleX;
     goalMarker.scaleY = 1.0 / stage.scaleY;
@@ -95,8 +97,8 @@ NAV2D.Navigator = function(options) {
   });
   poseListener.subscribe(function(pose) {
     // update the robots position on the map
-    robotMarker.x = pose.position.x;
-    robotMarker.y = -pose.position.y;
+    robotMarker.x = pose.position.x - map_origin.position.x;
+    robotMarker.y = -(pose.position.y - map_origin.position.y);
     if (!initScaleSet) {
       robotMarker.scaleX = 1.0 / stage.scaleX;
       robotMarker.scaleY = 1.0 / stage.scaleY;
@@ -116,6 +118,9 @@ NAV2D.Navigator = function(options) {
     var pose = new ROSLIB.Pose({
       position : new ROSLIB.Vector3(coords)
     });
+
+    pose.position.x = pose.position.x + map_origin.position.x;
+    pose.position.y = pose.position.y + map_origin.position.y;
     // send the goal
     sendGoal(pose);
   });
