@@ -13,7 +13,10 @@ var NAV2D = NAV2D || {
  */
 
 /**
- * A navigator can be used to add click-to-navigate options to an object.
+ * A navigator can be used to add click-to-navigate options to an object. If
+ * withOrientation is set to true, the user can also specify the orientation of
+ * the robot by clicking at the goal position and pointing into the desired
+ * direction (while holding the button pressed).
  *
  * @constructor
  * @param options - object with following keys:
@@ -21,6 +24,7 @@ var NAV2D = NAV2D || {
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
+ *   * withOrientation (optional) - if the Navigator should consider the robot orientation (default: false)
  */
 NAV2D.Navigator = function(options) {
   var that = this;
@@ -260,6 +264,7 @@ NAV2D.Navigator = function(options) {
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
+ *   * withOrientation (optional) - if the Navigator should consider the robot orientation (default: false)
  *   * viewer - the main viewer to render to
  */
 NAV2D.OccupancyGridClientNav = function(options) {

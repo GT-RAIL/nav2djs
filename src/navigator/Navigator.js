@@ -15,7 +15,7 @@
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
- *   * withOrientation (optional) - if the Navigator should consider the robot orientation (default: false) 
+ *   * withOrientation (optional) - if the Navigator should consider the robot orientation (default: false)
  */
 NAV2D.Navigator = function(options) {
   var that = this;
