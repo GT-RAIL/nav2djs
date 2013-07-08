@@ -1,6 +1,6 @@
 /**
  * @author Russell Toris - rctoris@wpi.edu
- *   Adapted by Lars Kunze - l.kunze@cs.bham.ac.uk
+ * @author Lars Kunze - l.kunze@cs.bham.ac.uk
  */
 
 var NAV2D = NAV2D || {
@@ -9,7 +9,7 @@ var NAV2D = NAV2D || {
 
 /**
  * @author Russell Toris - rctoris@wpi.edu
- *   Adapted by Lars Kunze - l.kunze@cs.bham.ac.uk
+ * @author Lars Kunze - l.kunze@cs.bham.ac.uk
  */
 
 /**
@@ -34,8 +34,6 @@ NAV2D.Navigator = function(options) {
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   var withOrientation = options.withOrientation || false;
   this.rootObject = options.rootObject || new createjs.Container();
-  
-  
 
   // setup the actionlib client
   var actionClient = new ROSLIB.ActionClient({
@@ -244,7 +242,6 @@ NAV2D.Navigator = function(options) {
     this.rootObject.addEventListener('stagemouseup', function(event) {
       mouseEventHandler(event,'up');
     });
-    
   }
 };
 
