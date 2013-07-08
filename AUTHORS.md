@@ -7,4 +7,4 @@ Contributors
 ------------
 
  * Jihoon Lee (jihoonlee.in@gmail.com)
- 
+ * Lars Kunze (l.kunze@cs.bham.ac.uk)
