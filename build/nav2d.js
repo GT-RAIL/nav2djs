@@ -4,7 +4,7 @@
  */
 
 var NAV2D = NAV2D || {
-  REVISION : '2-devel'
+  REVISION : '2'
 };
 
 /**
