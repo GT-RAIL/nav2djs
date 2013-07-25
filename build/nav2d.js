@@ -194,7 +194,7 @@ NAV2D.Navigator = function(options) {
           
           that.rootObject.addChild(orientationMarker);
         }
-      } else { // mouseState === 'up'
+      } else if (mouseDown) { // mouseState === 'up'
         // if mouse button is released
         // - get current mouse position (goalPos)
         // - calulate direction between stored <position> and goal position
