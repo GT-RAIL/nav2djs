@@ -1,4 +1,4 @@
-.project
-.settings
-.vagrant
+.idea
 node_modules
+build
+doc
