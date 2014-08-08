@@ -4,5 +4,5 @@
  */
 
 var NAV2D = NAV2D || {
-  REVISION : '0.3.0'
+  REVISION : '0.4.0-SNAPSHOT'
 };
