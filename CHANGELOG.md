@@ -1,4 +1,6 @@
-DEVEL - **r3**
+2014-08-08 - **0.3.0**
+ * Added ImageMapClientNav [(rctoris)](https://github.com/rctoris/)
+ * Fixed incorrect shift in OccupancyGridClientNav [(rctoris)](https://github.com/rctoris/)
 
 2013-07-08 - **r2**
  * Shift added to grid client to center on map [(rctoris)](https://github.com/rctoris/)
