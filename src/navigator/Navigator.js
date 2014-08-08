@@ -55,7 +55,7 @@ NAV2D.Navigator = function(options) {
 
     // create a marker for the goal
     var goalMarker = new ROS2D.NavigationArrow({
-      size : 8,
+      size : 15,
       strokeSize : 1,
       fillColor : createjs.Graphics.getRGB(255, 64, 128, 0.66),
       pulse : true
@@ -82,7 +82,7 @@ NAV2D.Navigator = function(options) {
 
   // marker for the robot
   var robotMarker = new ROS2D.NavigationArrow({
-    size : 12,
+    size : 25,
     strokeSize : 1,
     fillColor : createjs.Graphics.getRGB(255, 128, 0, 0.66),
     pulse : true
@@ -158,7 +158,7 @@ NAV2D.Navigator = function(options) {
           var currentPosVec3 = new ROSLIB.Vector3(currentPos);
 
           orientationMarker = new ROS2D.NavigationArrow({
-            size : 30,
+            size : 25,
             strokeSize : 1,
             fillColor : createjs.Graphics.getRGB(0, 255, 0, 0.66),
             pulse : false
@@ -167,7 +167,7 @@ NAV2D.Navigator = function(options) {
           xDelta =  currentPosVec3.x - positionVec3.x;
           yDelta =  currentPosVec3.y - positionVec3.y;
           
-          thetaRadians  = Math.atan2(xDelta,yDelta) + Math.PI/2;
+          thetaRadians  = Math.atan2(xDelta,yDelta);
 
           thetaDegrees = thetaRadians * (180.0 / Math.PI);
           
