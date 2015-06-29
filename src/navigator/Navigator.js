@@ -97,36 +97,36 @@ NAV2D.Navigator = function(options) {
   var initScaleSet = false;
 
   var updateRobotPosition = function(pose, orientation) {
-		// update the robots position on the map
-		robotMarker.x = pose.x;
-		robotMarker.y = -pose.y;
-		if (!initScaleSet) {
-			robotMarker.scaleX = 1.0 / stage.scaleX;
-			robotMarker.scaleY = 1.0 / stage.scaleY;
-			initScaleSet = true;
-		}
-		// change the angle
-		robotMarker.rotation = stage.rosQuaternionToGlobalTheta(orientation);
-		// Set visible
-		robotMarker.visible = true;
-	}
+    // update the robots position on the map
+    robotMarker.x = pose.x;
+    robotMarker.y = -pose.y;
+    if (!initScaleSet) {
+      robotMarker.scaleX = 1.0 / stage.scaleX;
+      robotMarker.scaleY = 1.0 / stage.scaleY;
+      initScaleSet = true;
+    }
+    // change the angle
+    robotMarker.rotation = stage.rosQuaternionToGlobalTheta(orientation);
+    // Set visible
+    robotMarker.visible = true;
+  }
 
-	if(tfClient !== null) {
-			tfClient.subscribe(robot_pose, function(tf) {
-				updateRobotPosition(tf.translation,tf.rotation);
-			});
-	} else {
-			// setup a listener for the robot pose
-			var poseListener = new ROSLIB.Topic({
-				ros: ros,
-				name: robot_pose,
-				messageType: 'geometry_msgs/Pose',
-				throttle_rate: 100
-			});
-			poseListener.subscribe(function(pose) {
-				updateRobotPosition(pose.position,pose.orientation);
-			});
-	}
+  if(tfClient !== null) {
+    tfClient.subscribe(robot_pose, function(tf) {
+      updateRobotPosition(tf.translation,tf.rotation);
+    });
+  } else {
+    // setup a listener for the robot pose
+    var poseListener = new ROSLIB.Topic({
+      ros: ros,
+      name: robot_pose,
+      messageType: 'geometry_msgs/Pose',
+      throttle_rate: 100
+    });
+    poseListener.subscribe(function(pose) {
+      updateRobotPosition(pose.position,pose.orientation);
+    });
+  }
   
   if (withOrientation === false){
     // setup a double click listener (no orientation)
