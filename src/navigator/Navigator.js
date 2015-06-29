@@ -1,6 +1,7 @@
 /**
  * @author Russell Toris - rctoris@wpi.edu
  * @author Lars Kunze - l.kunze@cs.bham.ac.uk
+ * @author Raffaello Bonghi - raffaello.bonghi@officinerobotiche.it
  */
 
 /**
@@ -26,6 +27,8 @@ NAV2D.Navigator = function(options) {
   var withOrientation = options.withOrientation || false;
   this.rootObject = options.rootObject || new createjs.Container();
 
+  this.goalMarker = null;
+  
   // setup the actionlib client
   var actionClient = new ROSLIB.ActionClient({
     ros : ros,
@@ -54,21 +57,23 @@ NAV2D.Navigator = function(options) {
     goal.send();
 
     // create a marker for the goal
-    var goalMarker = new ROS2D.NavigationArrow({
-      size : 15,
-      strokeSize : 1,
-      fillColor : createjs.Graphics.getRGB(255, 64, 128, 0.66),
-      pulse : true
-    });
-    goalMarker.x = pose.position.x;
-    goalMarker.y = -pose.position.y;
-    goalMarker.rotation = stage.rosQuaternionToGlobalTheta(pose.orientation);
-    goalMarker.scaleX = 1.0 / stage.scaleX;
-    goalMarker.scaleY = 1.0 / stage.scaleY;
-    that.rootObject.addChild(goalMarker);
+    if (that.goalMarker == null) {
+      that.goalMarker = new ROS2D.NavigationArrow({
+        size: 15,
+        strokeSize: 1,
+        fillColor: createjs.Graphics.getRGB(255, 64, 128, 0.66),
+        pulse: true
+      });
+      that.rootObject.addChild(that.goalMarker);
+    }
+    that.goalMarker.x = pose.position.x;
+    that.goalMarker.y = -pose.position.y;
+    that.goalMarker.rotation = stage.rosQuaternionToGlobalTheta(pose.orientation);
+    that.goalMarker.scaleX = 1.0 / stage.scaleX;
+    that.goalMarker.scaleY = 1.0 / stage.scaleY;
 
     goal.on('result', function() {
-      that.rootObject.removeChild(goalMarker);
+      that.rootObject.removeChild(that.goalMarker);
     });
   }
 
