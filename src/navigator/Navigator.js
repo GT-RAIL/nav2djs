@@ -57,7 +57,7 @@ NAV2D.Navigator = function(options) {
     goal.send();
 
     // create a marker for the goal
-    if (that.goalMarker == null) {
+    if (that.goalMarker === null) {
       that.goalMarker = new ROS2D.NavigationArrow({
         size: 15,
         strokeSize: 1,
