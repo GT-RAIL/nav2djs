@@ -49,12 +49,12 @@ NAV2D.OccupancyGridClientNav = function(options) {
 
   client.on('change', function() {
     // scale the viewer to fit the map
-    if (that.old_state.width != client.currentGrid.width || that.old_state.height != client.currentGrid.height) {
+    if (that.old_state.width !== client.currentGrid.width || that.old_state.height !== client.currentGrid.height) {
       that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
       that.old_state.width = client.currentGrid.width;
       that.old_state.height = client.currentGrid.height;
     }
-    if (that.old_state.x != client.currentGrid.pose.position.x || that.old_state.y != client.currentGrid.pose.position.y) {
+    if (that.old_state.x !== client.currentGrid.pose.position.x || that.old_state.y !== client.currentGrid.pose.position.y) {
       that.viewer.shift((-that.old_state.x+client.currentGrid.pose.position.x)/1, (-that.old_state.y+client.currentGrid.pose.position.y)/1);
       that.old_state.x = client.currentGrid.pose.position.x;
       that.old_state.y = client.currentGrid.pose.position.y;
