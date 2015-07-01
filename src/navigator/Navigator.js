@@ -109,7 +109,7 @@ NAV2D.Navigator = function(options) {
     robotMarker.rotation = stage.rosQuaternionToGlobalTheta(orientation);
     // Set visible
     robotMarker.visible = true;
-  }
+  };
 
   if(tfClient !== null) {
     tfClient.subscribe(robot_pose, function(tf) {
