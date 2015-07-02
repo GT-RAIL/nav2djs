@@ -29,8 +29,6 @@ NAV2D.OccupancyGridClientNav = function(options) {
   this.viewer = options.viewer;
   this.withOrientation = options.withOrientation || false;
 
-  this.navigator = null;
-
   // setup a client to get the map
   var client = new ROS2D.OccupancyGridClient({
     ros : this.ros,
@@ -38,17 +36,28 @@ NAV2D.OccupancyGridClientNav = function(options) {
     continuous : continuous,
     topic : topic
   });
+  
+  var navigator = new NAV2D.Navigator({
+    ros: this.ros,
+    tfClient: this.tfClient,
+    serverName: this.serverName,
+    actionName: this.actionName,
+    robot_pose : this.robot_pose,
+    rootObject: this.rootObject,
+    withOrientation: this.withOrientation
+  });
+
   client.on('change', function() {
-    that.navigator = new NAV2D.Navigator({
-      ros : that.ros,
-      serverName : that.serverName,
-      actionName : that.actionName,
-      rootObject : that.rootObject,
-      withOrientation : that.withOrientation
-    });
-    
     // scale the viewer to fit the map
-    that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
-    that.viewer.shift(client.currentGrid.pose.position.x, client.currentGrid.pose.position.y);
+    if (that.old_state.width !== client.currentGrid.width || that.old_state.height !== client.currentGrid.height) {
+      that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
+      that.old_state.width = client.currentGrid.width;
+      that.old_state.height = client.currentGrid.height;
+    }
+    if (that.old_state.x !== client.currentGrid.pose.position.x || that.old_state.y !== client.currentGrid.pose.position.y) {
+      that.viewer.shift((-that.old_state.x+client.currentGrid.pose.position.x)/1, (-that.old_state.y+client.currentGrid.pose.position.y)/1);
+      that.old_state.x = client.currentGrid.pose.position.x;
+      that.old_state.y = client.currentGrid.pose.position.y;
+    }
   });
 };
