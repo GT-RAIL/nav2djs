@@ -8,7 +8,9 @@
  * @constructor
  * @param options - object with following keys:
  *   * ros - the ROSLIB.Ros connection handle
+ *   * tfClient (optional) - Read information from TF
  *   * topic (optional) - the map topic to listen to
+ *   * robot_pose (optional) - the robot topic or TF to listen position
  *   * rootObject (optional) - the root object to add this marker to
  *   * continuous (optional) - if the map should be continuously loaded (e.g., for SLAM)
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
@@ -21,7 +23,9 @@ NAV2D.OccupancyGridClientNav = function(options) {
   var that = this;
   options = options || {};
   this.ros = options.ros;
-  var topic = options.topic || '/map';
+  this.tfClient = options.tfClient || null;
+  var map_topic = options.topic || '/map';
+  this.robot_pose = options.robot_pose || '/robot_pose';
   var continuous = options.continuous;
   this.serverName = options.serverName || '/move_base';
   this.actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
@@ -34,9 +38,9 @@ NAV2D.OccupancyGridClientNav = function(options) {
     ros : this.ros,
     rootObject : this.rootObject,
     continuous : continuous,
-    topic : topic
+    topic : map_topic
   });
-  
+
   var navigator = new NAV2D.Navigator({
     ros: this.ros,
     tfClient: this.tfClient,
