@@ -15,6 +15,7 @@
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
  *   * withOrientation (optional) - if the Navigator should consider the robot orientation (default: false)
+ *   * image (optional) - the route of the image if we want to use the NavigationImage instead the NavigationArrow
  *   * viewer - the main viewer to render to
  */
 NAV2D.OccupancyGridClientNav = function(options) {
@@ -28,6 +29,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
   this.rootObject = options.rootObject || new createjs.Container();
   this.viewer = options.viewer;
   this.withOrientation = options.withOrientation || false;
+  this.image = options.image || false;
 
   // setup a client to get the map
   var client = new ROS2D.OccupancyGridClient({
@@ -36,7 +38,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
     continuous : continuous,
     topic : topic
   });
-  
+
   var navigator = new NAV2D.Navigator({
     ros: this.ros,
     tfClient: this.tfClient,
@@ -44,7 +46,8 @@ NAV2D.OccupancyGridClientNav = function(options) {
     actionName: this.actionName,
     robot_pose : this.robot_pose,
     rootObject: this.rootObject,
-    withOrientation: this.withOrientation
+    withOrientation: this.withOrientation,
+    image: that.image
   });
 
   client.on('change', function() {
