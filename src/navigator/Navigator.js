@@ -25,10 +25,11 @@ NAV2D.Navigator = function(options) {
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   var withOrientation = options.withOrientation || false;
+  var use_image = options.image;
   this.rootObject = options.rootObject || new createjs.Container();
 
   this.goalMarker = null;
-  
+
   // setup the actionlib client
   var actionClient = new ROSLIB.ActionClient({
     ros : ros,
@@ -58,12 +59,21 @@ NAV2D.Navigator = function(options) {
 
     // create a marker for the goal
     if (that.goalMarker === null) {
-      that.goalMarker = new ROS2D.NavigationArrow({
-        size: 15,
-        strokeSize: 1,
-        fillColor: createjs.Graphics.getRGB(255, 64, 128, 0.66),
-        pulse: true
-      });
+      if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
+        that.goalMarker = new ROS2D.ImageNavigator({
+          size: 2.5,
+          image: use_image,
+          alpha: 0.7,
+          pulse: true
+        });
+      } else {
+        that.goalMarker = new ROS2D.NavigationArrow({
+          size: 15,
+          strokeSize: 1,
+          fillColor: createjs.Graphics.getRGB(255, 64, 128, 0.66),
+          pulse: true
+        });
+      }
       that.rootObject.addChild(that.goalMarker);
     }
     that.goalMarker.x = pose.position.x;
@@ -86,12 +96,22 @@ NAV2D.Navigator = function(options) {
   }
 
   // marker for the robot
-  var robotMarker = new ROS2D.NavigationArrow({
-    size : 25,
-    strokeSize : 1,
-    fillColor : createjs.Graphics.getRGB(255, 128, 0, 0.66),
-    pulse : true
-  });
+  var robotMarker = null;
+  if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
+    robotMarker = new ROS2D.ImageNavigator({
+      size: 2.5,
+      image: use_image,
+      pulse: true
+    });
+  } else {
+    robotMarker = new ROS2D.NavigationArrow({
+      size : 25,
+      strokeSize : 1,
+      fillColor : createjs.Graphics.getRGB(255, 128, 0, 0.66),
+      pulse : true
+    });
+  }
+
   // wait for a pose to come in first
   robotMarker.visible = false;
   this.rootObject.addChild(robotMarker);
@@ -153,7 +173,7 @@ NAV2D.Navigator = function(options) {
       else if (mouseState === 'move'){
         // remove obsolete orientation marker
         that.rootObject.removeChild(orientationMarker);
-        
+
         if ( mouseDown === true) {
           // if mouse button is held down:
           // - get current mouse position
@@ -162,20 +182,29 @@ NAV2D.Navigator = function(options) {
           var currentPos = stage.globalToRos(event.stageX, event.stageY);
           var currentPosVec3 = new ROSLIB.Vector3(currentPos);
 
-          orientationMarker = new ROS2D.NavigationArrow({
-            size : 25,
-            strokeSize : 1,
-            fillColor : createjs.Graphics.getRGB(0, 255, 0, 0.66),
-            pulse : false
-          });
+          if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
+            orientationMarker = new ROS2D.ImageNavigator({
+              size: 2.5,
+              image: use_image,
+              alpha: 0.7,
+              pulse: false
+            });
+          } else {
+            orientationMarker = new ROS2D.NavigationArrow({
+              size : 25,
+              strokeSize : 1,
+              fillColor : createjs.Graphics.getRGB(0, 255, 0, 0.66),
+              pulse : false
+            });
+          }
 
           xDelta =  currentPosVec3.x - positionVec3.x;
           yDelta =  currentPosVec3.y - positionVec3.y;
-          
+
           thetaRadians  = Math.atan2(xDelta,yDelta);
 
           thetaDegrees = thetaRadians * (180.0 / Math.PI);
-          
+
           if (thetaDegrees >= 0 && thetaDegrees <= 180) {
             thetaDegrees += 270;
           } else {
@@ -187,7 +216,7 @@ NAV2D.Navigator = function(options) {
           orientationMarker.rotation = thetaDegrees;
           orientationMarker.scaleX = 1.0 / stage.scaleX;
           orientationMarker.scaleY = 1.0 / stage.scaleY;
-          
+
           that.rootObject.addChild(orientationMarker);
         }
       } else if (mouseDown) { // mouseState === 'up'
@@ -201,23 +230,23 @@ NAV2D.Navigator = function(options) {
         var goalPos = stage.globalToRos(event.stageX, event.stageY);
 
         var goalPosVec3 = new ROSLIB.Vector3(goalPos);
-        
+
         xDelta =  goalPosVec3.x - positionVec3.x;
         yDelta =  goalPosVec3.y - positionVec3.y;
-        
+
         thetaRadians  = Math.atan2(xDelta,yDelta);
-        
+
         if (thetaRadians >= 0 && thetaRadians <= Math.PI) {
           thetaRadians += (3 * Math.PI / 2);
         } else {
           thetaRadians -= (Math.PI/2);
         }
-        
+
         var qz =  Math.sin(-thetaRadians/2.0);
         var qw =  Math.cos(-thetaRadians/2.0);
-        
+
         var orientation = new ROSLIB.Quaternion({x:0, y:0, z:qz, w:qw});
-        
+
         var pose = new ROSLIB.Pose({
           position :    positionVec3,
           orientation : orientation
