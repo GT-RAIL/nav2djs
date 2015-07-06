@@ -30,6 +30,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
   this.viewer = options.viewer;
   this.withOrientation = options.withOrientation || false;
   this.image = options.image || false;
+  this.old_state = null;
 
   // setup a client to get the map
   var client = new ROS2D.OccupancyGridClient({
@@ -52,6 +53,16 @@ NAV2D.OccupancyGridClientNav = function(options) {
 
   client.on('change', function() {
     // scale the viewer to fit the map
+    if(!that.old_state){
+      that.old_state = {
+        width: client.currentGrid.width,
+        height: client.currentGrid.height,
+        x: client.currentGrid.pose.position.x,
+        y: client.currentGrid.pose.position.y
+      };
+      that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
+      that.viewer.shift(client.currentGrid.pose.position.x, client.currentGrid.pose.position.y);
+    }
     if (that.old_state.width !== client.currentGrid.width || that.old_state.height !== client.currentGrid.height) {
       that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
       that.old_state.width = client.currentGrid.width;
