@@ -61,7 +61,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
         y: client.currentGrid.pose.position.y
       };
       that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
-    that.viewer.shift(client.currentGrid.pose.position.x, client.currentGrid.pose.position.y);
+      that.viewer.shift(client.currentGrid.pose.position.x, client.currentGrid.pose.position.y);
     }
     if (that.old_state.width !== client.currentGrid.width || that.old_state.height !== client.currentGrid.height) {
       that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
