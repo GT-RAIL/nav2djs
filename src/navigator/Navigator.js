@@ -13,6 +13,8 @@
  * @constructor
  * @param options - object with following keys:
  *   * ros - the ROSLIB.Ros connection handle
+ *   * tfClient (optional) - the TF client
+ *   * robot_pose (optional) - the robot topic or TF to listen position
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to
@@ -22,6 +24,8 @@ NAV2D.Navigator = function(options) {
   var that = this;
   options = options || {};
   var ros = options.ros;
+  var tfClient = options.tfClient || null;
+  var robot_pose = options.robot_pose || '/robot_pose';
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   var withOrientation = options.withOrientation || false;
@@ -117,29 +121,38 @@ NAV2D.Navigator = function(options) {
   this.rootObject.addChild(robotMarker);
   var initScaleSet = false;
 
-  // setup a listener for the robot pose
-  var poseListener = new ROSLIB.Topic({
-    ros : ros,
-    name : '/robot_pose',
-    messageType : 'geometry_msgs/Pose',
-    throttle_rate : 100
-  });
-  poseListener.subscribe(function(pose) {
+  var updateRobotPosition = function(pose, orientation) {
     // update the robots position on the map
-    robotMarker.x = pose.position.x;
-    robotMarker.y = -pose.position.y;
+    robotMarker.x = pose.x;
+    robotMarker.y = -pose.y;
     if (!initScaleSet) {
       robotMarker.scaleX = 1.0 / stage.scaleX;
       robotMarker.scaleY = 1.0 / stage.scaleY;
       initScaleSet = true;
     }
-
     // change the angle
-    robotMarker.rotation = stage.rosQuaternionToGlobalTheta(pose.orientation);
-
+    robotMarker.rotation = stage.rosQuaternionToGlobalTheta(orientation);
+    // Set visible
     robotMarker.visible = true;
-  });
+  };
 
+  if(tfClient !== null) {
+    tfClient.subscribe(robot_pose, function(tf) {
+      updateRobotPosition(tf.translation,tf.rotation);
+    });
+  } else {
+    // setup a listener for the robot pose
+    var poseListener = new ROSLIB.Topic({
+      ros: ros,
+      name: robot_pose,
+      messageType: 'geometry_msgs/Pose',
+      throttle_rate: 100
+    });
+    poseListener.subscribe(function(pose) {
+      updateRobotPosition(pose.position,pose.orientation);
+    });
+  }
+  
   if (withOrientation === false){
     // setup a double click listener (no orientation)
     this.rootObject.addEventListener('dblclick', function(event) {

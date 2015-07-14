@@ -8,7 +8,9 @@
  * @constructor
  * @param options - object with following keys:
  *   * ros - the ROSLIB.Ros connection handle
+ *   * tfClient (optional) - Read information from TF
  *   * topic (optional) - the map topic to listen to
+ *   * robot_pose (optional) - the robot topic or TF to listen position
  *   * rootObject (optional) - the root object to add this marker to
  *   * continuous (optional) - if the map should be continuously loaded (e.g., for SLAM)
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
@@ -21,57 +23,40 @@
 NAV2D.OccupancyGridClientNav = function(options) {
   var that = this;
   options = options || {};
-  this.ros = options.ros;
-  var topic = options.topic || '/map';
+  var ros = options.ros;
+  var tfClient = options.tfClient || null;
+  var map_topic = options.topic || '/map';
+  var robot_pose = options.robot_pose || '/robot_pose';
   var continuous = options.continuous;
-  this.serverName = options.serverName || '/move_base';
-  this.actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
-  this.rootObject = options.rootObject || new createjs.Container();
-  this.viewer = options.viewer;
-  this.withOrientation = options.withOrientation || false;
-  this.image = options.image || false;
-  this.old_state = null;
+  var serverName = options.serverName || '/move_base';
+  var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
+  var rootObject = options.rootObject || new createjs.Container();
+  var viewer = options.viewer;
+  var withOrientation = options.withOrientation || false;
+  var image = options.image || false;
+  var old_state = null;
 
   // setup a client to get the map
   var client = new ROS2D.OccupancyGridClient({
-    ros : this.ros,
-    rootObject : this.rootObject,
+    ros : ros,
+    rootObject : rootObject,
     continuous : continuous,
-    topic : topic
+    topic : map_topic
   });
 
   var navigator = new NAV2D.Navigator({
-    ros: this.ros,
-    tfClient: this.tfClient,
-    serverName: this.serverName,
-    actionName: this.actionName,
-    robot_pose : this.robot_pose,
-    rootObject: this.rootObject,
-    withOrientation: this.withOrientation,
-    image: that.image
+    ros: ros,
+    tfClient: tfClient,
+    serverName: serverName,
+    actionName: actionName,
+    robot_pose : robot_pose,
+    rootObject: rootObject,
+    withOrientation: withOrientation,
+    image: image
   });
 
   client.on('change', function() {
     // scale the viewer to fit the map
-    if(!that.old_state){
-      that.old_state = {
-        width: client.currentGrid.width,
-        height: client.currentGrid.height,
-        x: client.currentGrid.pose.position.x,
-        y: client.currentGrid.pose.position.y
-      };
-      that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
-      that.viewer.shift(client.currentGrid.pose.position.x, client.currentGrid.pose.position.y);
-    }
-    if (that.old_state.width !== client.currentGrid.width || that.old_state.height !== client.currentGrid.height) {
-      that.viewer.scaleToDimensions(client.currentGrid.width, client.currentGrid.height);
-      that.old_state.width = client.currentGrid.width;
-      that.old_state.height = client.currentGrid.height;
-    }
-    if (that.old_state.x !== client.currentGrid.pose.position.x || that.old_state.y !== client.currentGrid.pose.position.y) {
-      that.viewer.shift((-that.old_state.x+client.currentGrid.pose.position.x)/1, (-that.old_state.y+client.currentGrid.pose.position.y)/1);
-      that.old_state.x = client.currentGrid.pose.position.x;
-      that.old_state.y = client.currentGrid.pose.position.y;
-    }
+    old_state = NAV2D.resizeMap(old_state, viewer, client.currentGrid);
   });
 };
