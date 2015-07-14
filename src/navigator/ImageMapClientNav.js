@@ -8,8 +8,11 @@
  * @constructor
  * @param options - object with following keys:
  *   * ros - the ROSLIB.Ros connection handle
+ *   * tfClient (optional) - Read information from TF
  *   * topic (optional) - the map meta data topic to listen to
- *   * image - the URL of the image to render
+ *   * robot_pose (optional) - the robot topic or TF to listen position
+ *   * image_map - the URL of the image to render
+ *   * image (optional) - the route of the image if we want to use the NavigationImage instead the NavigationArrow
  *   * serverName (optional) - the action server name to use for navigation, like '/move_base'
  *   * actionName (optional) - the navigation action name, like 'move_base_msgs/MoveBaseAction'
  *   * rootObject (optional) - the root object to add the click listeners to and render robot markers to

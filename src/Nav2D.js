@@ -7,6 +7,13 @@ var NAV2D = NAV2D || {
   REVISION : '0.4.0-SNAPSHOT'
 };
 
+/**
+ * USE INTERNALLY. Resize an Image map when receive new dimension.
+ *
+ * @param old_state - Previous state
+ * @param viewer - Viewer 2D
+ * @param currentGrid - Current grid with information about width, height and position
+ */
 NAV2D.resizeMap = function(old_state, viewer, currentGrid) {
   if(!old_state){
     old_state = {
