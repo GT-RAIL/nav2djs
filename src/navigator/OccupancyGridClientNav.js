@@ -30,6 +30,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
   this.viewer = options.viewer;
   this.withOrientation = options.withOrientation || false;
   this.image = options.image || false;
+  this.image_size = options.image_size || 2.5;
   this.old_state = null;
 
   // setup a client to get the map

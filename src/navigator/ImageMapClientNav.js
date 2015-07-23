@@ -26,6 +26,8 @@ NAV2D.ImageMapClientNav = function(options) {
   this.actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   this.rootObject = options.rootObject || new createjs.Container();
   this.viewer = options.viewer;
+  this.image = options.image || false;
+  this.image_size = options.image_size || 2.5;
   this.withOrientation = options.withOrientation || false;
 
   this.navigator = null;

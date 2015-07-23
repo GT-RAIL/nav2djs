@@ -26,6 +26,7 @@ NAV2D.Navigator = function(options) {
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   var withOrientation = options.withOrientation || false;
   var use_image = options.image;
+  var image_size = options.image_size;
   this.rootObject = options.rootObject || new createjs.Container();
 
   this.goalMarker = null;
@@ -61,7 +62,7 @@ NAV2D.Navigator = function(options) {
     if (that.goalMarker === null) {
       if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
         that.goalMarker = new ROS2D.ImageNavigator({
-          size: 2.5,
+          size: image_size,
           image: use_image,
           alpha: 0.7,
           pulse: true
@@ -99,7 +100,7 @@ NAV2D.Navigator = function(options) {
   var robotMarker = null;
   if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
     robotMarker = new ROS2D.ImageNavigator({
-      size: 2.5,
+      size: image_size,
       image: use_image,
       pulse: true
     });
@@ -184,7 +185,7 @@ NAV2D.Navigator = function(options) {
 
           if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
             orientationMarker = new ROS2D.ImageNavigator({
-              size: 2.5,
+              size: image_size,
               image: use_image,
               alpha: 0.7,
               pulse: false
