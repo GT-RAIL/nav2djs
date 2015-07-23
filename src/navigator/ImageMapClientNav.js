@@ -28,6 +28,7 @@ NAV2D.ImageMapClientNav = function(options) {
   var robot_pose = options.robot_pose || '/robot_pose';
   var image_map = options.image_map;
   var image = options.image || false;
+  var image_size = options.image_size || 2.5;
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
   var rootObject = options.rootObject || new createjs.Container();
@@ -51,7 +52,8 @@ NAV2D.ImageMapClientNav = function(options) {
     robot_pose : robot_pose,
     rootObject: rootObject,
     withOrientation: withOrientation,
-    image: image
+    image: image,
+    image_size: image_size
   });
 
   client.on('change', function() {
