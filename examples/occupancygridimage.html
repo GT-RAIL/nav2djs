@@ -6,12 +6,13 @@
 <script src="http://cdn.robotwebtools.org/EaselJS/current/easeljs.min.js"></script>
 <script src="http://cdn.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 <script src="http://cdn.robotwebtools.org/roslibjs/current/roslib.js"></script>
-<script src="http://cdn.robotwebtools.org/ros2djs/current/ros2d.js"></script>
+<!-- <script src="http://cdn.robotwebtools.org/ros2djs/current/ros2d.js"></script> -->
+<script src="https://rawgit.com/RobotWebTools/ros2djs/develop/build/ros2d.js"></script>
 <script src="../build/nav2d.js"></script>
 
 <script>
   /**
-   * Setup all visualization elements when the page is loaded. 
+   * Setup all visualization elements when the page is loaded.
    */
   function init() {
     // Connect to ROS.
@@ -31,7 +32,8 @@
       ros : ros,
       rootObject : viewer.scene,
       viewer : viewer,
-      serverName : '/pr2_move_base'
+      serverName : '/pr2_move_base',
+      image: 'turtlebot.png'
     });
   }
 </script>
