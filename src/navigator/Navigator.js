@@ -33,6 +33,8 @@ NAV2D.Navigator = function(options) {
   this.rootObject = options.rootObject || new createjs.Container();
 
   this.goalMarker = null;
+  
+  var currentGoal;
 
   // setup the actionlib client
   var actionClient = new ROSLIB.ActionClient({
@@ -60,6 +62,8 @@ NAV2D.Navigator = function(options) {
       }
     });
     goal.send();
+    
+    that.currentGoal = goal;
 
     // create a marker for the goal
     if (that.goalMarker === null) {
@@ -90,6 +94,15 @@ NAV2D.Navigator = function(options) {
       that.rootObject.removeChild(that.goalMarker);
     });
   }
+  
+  /**
+   * Cancel the currently active goal.
+   */
+  this.cancelGoal = function () {
+    if (typeof that.currentGoal !== 'undefined') {
+      that.currentGoal.cancel();
+    }
+  };
 
   // get a handle to the stage
   var stage;
