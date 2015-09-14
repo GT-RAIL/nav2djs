@@ -99,7 +99,7 @@ NAV2D.Navigator = function(options) {
    * Cancel the currently active goal.
    */
   this.cancelGoal = function () {
-    if (typeof that.currentGoal !== "undefined") {
+    if (typeof that.currentGoal !== 'undefined') {
       that.currentGoal.cancel();
     }
   }
