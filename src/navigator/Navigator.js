@@ -102,7 +102,7 @@ NAV2D.Navigator = function(options) {
     if (typeof that.currentGoal !== 'undefined') {
       that.currentGoal.cancel();
     }
-  }
+  };
 
   // get a handle to the stage
   var stage;
