@@ -34,6 +34,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
   var viewer = options.viewer;
   var withOrientation = options.withOrientation || false;
   var image = options.image || false;
+  var image_size = options.image_size || 2.5;
   var old_state = null;
 
   // setup a client to get the map
@@ -52,7 +53,8 @@ NAV2D.OccupancyGridClientNav = function(options) {
     robot_pose : robot_pose,
     rootObject: rootObject,
     withOrientation: withOrientation,
-    image: image
+    image: image,
+    image_size: image_size
   });
 
   client.on('change', function() {
