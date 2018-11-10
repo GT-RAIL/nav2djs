@@ -28,6 +28,7 @@ NAV2D.Navigator = function(options) {
   var robot_pose = options.robot_pose || '/robot_pose';
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
+  var frame_id = options.frame_id || '/map';
   var withOrientation = options.withOrientation || false;
   var use_image = options.image;
   this.rootObject = options.rootObject || new createjs.Container();
@@ -55,7 +56,7 @@ NAV2D.Navigator = function(options) {
       goalMessage : {
         target_pose : {
           header : {
-            frame_id : '/map'
+            frame_id : frame_id,
           },
           pose : pose
         }

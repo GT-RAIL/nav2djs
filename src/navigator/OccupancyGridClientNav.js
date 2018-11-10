@@ -30,6 +30,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
   var continuous = options.continuous;
   var serverName = options.serverName || '/move_base';
   var actionName = options.actionName || 'move_base_msgs/MoveBaseAction';
+  var frame_id = options.frame_id || '/map';
   var rootObject = options.rootObject || new createjs.Container();
   var viewer = options.viewer;
   var withOrientation = options.withOrientation || false;
@@ -49,6 +50,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
     tfClient: tfClient,
     serverName: serverName,
     actionName: actionName,
+    frame_id: frame_id,
     robot_pose : robot_pose,
     rootObject: rootObject,
     withOrientation: withOrientation,
