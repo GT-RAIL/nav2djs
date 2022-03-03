@@ -111,6 +111,9 @@ NAV2D.Navigator = function(options) {
   } else {
     stage = that.rootObject.getStage();
   }
+  
+  //enable touchscreen if the device supported
+  createjs.Touch.enable(stage);
 
   // marker for the robot
   var robotMarker = null;
