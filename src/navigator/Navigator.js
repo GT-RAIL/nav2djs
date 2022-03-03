@@ -49,8 +49,6 @@ NAV2D.Navigator = function(options) {
    * @param pose - the goal pose
    */
   function sendGoal(pose) {
-    // enable touchscreen capability if available
-    createjs.Touch.enable(stage);
     // create a goal
     var goal = new ROSLIB.Goal({
       actionClient : actionClient,
@@ -113,6 +111,9 @@ NAV2D.Navigator = function(options) {
   } else {
     stage = that.rootObject.getStage();
   }
+  
+  //enable touchscreen if the device supported
+  createjs.Touch.enable(stage);
 
   // marker for the robot
   var robotMarker = null;
