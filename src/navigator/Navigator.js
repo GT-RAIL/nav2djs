@@ -67,8 +67,8 @@ NAV2D.Navigator = function(options) {
 
     // create a marker for the goal
     if (that.goalMarker === null) {
-      if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
-        that.goalMarker = new ROS2D.ImageNavigator({
+      if (use_image && ROS2D.hasOwnProperty('NavigationImage')) {
+        that.goalMarker = new ROS2D.NavigationImage({
           size: 2.5,
           image: use_image,
           alpha: 0.7,
@@ -208,8 +208,8 @@ NAV2D.Navigator = function(options) {
           var currentPos = stage.globalToRos(event.stageX, event.stageY);
           var currentPosVec3 = new ROSLIB.Vector3(currentPos);
 
-          if (use_image && ROS2D.hasOwnProperty('ImageNavigator')) {
-            orientationMarker = new ROS2D.ImageNavigator({
+          if (use_image && ROS2D.hasOwnProperty('NavigationImage')) {
+            orientationMarker = new ROS2D.NavigationImage({
               size: 2.5,
               image: use_image,
               alpha: 0.7,
